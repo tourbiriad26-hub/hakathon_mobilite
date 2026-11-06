@@ -1,0 +1,14 @@
+# Connexion dbt -> PostgreSQL
+# Le mot de passe n'est jamais ecrit ici : il est lu dans une variable d'environnement.
+hakathon:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_PG_HOST', 'localhost') }}"
+      port: "{{ env_var('DBT_PG_PORT', '5432') | as_number }}"
+      user: "{{ env_var('DBT_PG_USER', 'postgres') }}"
+      password: "{{ env_var('DBT_PG_PASSWORD', '12345678') }}"
+      dbname: "{{ env_var('DBT_PG_DBNAME', 'postgres') }}"
+      schema: prod_hakathon
+      threads: 4

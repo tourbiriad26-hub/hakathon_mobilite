@@ -1,0 +1,139 @@
+[0m21:24:15.158800 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001FB1F22E3C0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001FB1CFACF50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001FB21E4F890>]}
+
+
+============================== 21:24:15.180579 | 85da4ca0-909e-4e03-a2b5-63f98274d086 ==============================
+[0m21:24:15.180579 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m21:24:15.181316 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'no_print': 'None', 'maximum_seed_size_mib': '1', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'version_check': 'True', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'profiles_dir': 'C:\\Users\\Yassine TOURBI\\Desktop\\HAKATHON PARIS\\DEV', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'indirect_selection': 'eager', 'hints_enabled': 'True', 'invocation_command': 'dbt debug', 'use_experimental_parser': 'False', 'use_colors': 'True', 'log_path': 'C:\\Users\\Yassine TOURBI\\Desktop\\HAKATHON PARIS\\DEV\\logs'}
+[0m21:24:15.182084 [debug] [MainThread]: Tracking: tracking
+[0m21:24:15.204251 [info ] [MainThread]: dbt version: 1.13.0-rc1
+[0m21:24:15.204753 [info ] [MainThread]: python version: 3.14.7
+[0m21:24:15.205076 [info ] [MainThread]: python path: C:\Users\Yassine TOURBI\AppData\Local\Programs\Python\Python314\python.exe
+[0m21:24:15.205372 [info ] [MainThread]: os info: Windows-11-10.0.26200-SP0
+[0m21:24:15.355385 [info ] [MainThread]: Using profiles dir at C:\Users\Yassine TOURBI\Desktop\HAKATHON PARIS\DEV
+[0m21:24:15.355881 [info ] [MainThread]: Using profiles.yml file at C:\Users\Yassine TOURBI\Desktop\HAKATHON PARIS\DEV\profiles.yml
+[0m21:24:15.356251 [info ] [MainThread]: Using dbt_project.yml file at C:\Users\Yassine TOURBI\Desktop\HAKATHON PARIS\DEV\dbt_project.yml
+[0m21:24:15.358026 [info ] [MainThread]: adapter type: postgres
+[0m21:24:15.358378 [info ] [MainThread]: adapter version: 1.11.0
+[0m21:24:15.452421 [info ] [MainThread]: Configuration:
+[0m21:24:15.452935 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m21:24:15.453350 [info ] [MainThread]:   dbt_project.yml file [[32mOK found and valid[0m]
+[0m21:24:15.453706 [info ] [MainThread]: Required dependencies:
+[0m21:24:15.454087 [debug] [MainThread]: Executing "git --help"
+[0m21:24:15.490909 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   history    EXPERIMENTAL: Rewrite history\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Set `HEAD` or the index to a known state\n   switch     Switch branches\n   tag        Create, list, delete or verify tags\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m21:24:15.491378 [debug] [MainThread]: STDERR: "b''"
+[0m21:24:15.491807 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m21:24:15.492123 [info ] [MainThread]: Connection:
+[0m21:24:15.492406 [info ] [MainThread]:   host: localhost
+[0m21:24:15.492659 [info ] [MainThread]:   port: 5432
+[0m21:24:15.492906 [info ] [MainThread]:   user: postgres
+[0m21:24:15.493150 [info ] [MainThread]:   database: hakathon
+[0m21:24:15.493393 [info ] [MainThread]:   schema: p_mob_w
+[0m21:24:15.493640 [info ] [MainThread]:   connect_timeout: 10
+[0m21:24:15.493882 [info ] [MainThread]:   role: None
+[0m21:24:15.494120 [info ] [MainThread]:   search_path: None
+[0m21:24:15.494357 [info ] [MainThread]:   keepalives_idle: 0
+[0m21:24:15.494603 [info ] [MainThread]:   sslmode: None
+[0m21:24:15.494844 [info ] [MainThread]:   sslcert: None
+[0m21:24:15.495079 [info ] [MainThread]:   sslkey: None
+[0m21:24:15.495316 [info ] [MainThread]:   sslrootcert: None
+[0m21:24:15.495551 [info ] [MainThread]:   application_name: dbt
+[0m21:24:15.495788 [info ] [MainThread]:   autocommit: False
+[0m21:24:15.496024 [info ] [MainThread]:   retries: 1
+[0m21:24:15.496432 [info ] [MainThread]: Registered adapter: postgres=1.11.0
+[0m21:24:15.810638 [debug] [MainThread]: Acquiring new postgres connection 'debug'
+[0m21:24:17.349441 [debug] [MainThread]: Using postgres connection "debug"
+[0m21:24:17.349939 [debug] [MainThread]: On debug: select 1 as id
+[0m21:24:17.350194 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m21:24:17.390388 [debug] [MainThread]: Postgres adapter: Error running SQL: select 1 as id
+[0m21:24:17.390846 [debug] [MainThread]: Postgres adapter: Rolling back transaction.
+[0m21:24:17.391166 [debug] [MainThread]: On debug: No close available on handle
+[0m21:24:17.391416 [info ] [MainThread]:   Connection test: [[31mERROR[0m]
+
+[0m21:24:17.391781 [info ] [MainThread]: [31m1 check failed:[0m
+[0m21:24:17.392107 [info ] [MainThread]: dbt was unable to connect to the specified database.
+The database returned the following error:
+
+  >Database Error
+  'utf-8' codec can't decode byte 0xe9 in position 103: invalid continuation byte
+
+Check your database credentials and try again. For more information, visit:
+https://docs.getdbt.com/docs/configure-your-profile
+
+
+[0m21:24:17.392763 [debug] [MainThread]: Command `dbt debug` failed at 21:24:17.392667 after 2.36 seconds
+[0m21:24:17.393021 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m21:24:17.393280 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001FB21EE3490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001FB1D7855B0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001FB1CFB05A0>]}
+[0m21:24:17.393599 [debug] [MainThread]: Flushing usage events
+[0m21:24:17.843673 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m21:36:58.927513 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001986BB2D6A0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000019869680CD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001986E4DB890>]}
+
+
+============================== 21:36:58.933694 | 3423a81a-a7c4-41a2-8d96-4c55b0a0c2d6 ==============================
+[0m21:36:58.933694 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m21:36:58.934277 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'maximum_seed_size_mib': '1', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'static_parser': 'True', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'profiles_dir': 'C:\\Users\\Yassine TOURBI\\Desktop\\HAKATHON PARIS\\DEV', 'invocation_command': 'dbt debug', 'hints_enabled': 'True', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'use_colors': 'True', 'log_path': 'C:\\Users\\Yassine TOURBI\\Desktop\\HAKATHON PARIS\\DEV\\logs'}
+[0m21:36:58.934575 [debug] [MainThread]: Tracking: tracking
+[0m21:36:58.964102 [info ] [MainThread]: dbt version: 1.13.0-rc1
+[0m21:36:58.964550 [info ] [MainThread]: python version: 3.14.7
+[0m21:36:58.965047 [info ] [MainThread]: python path: C:\Users\Yassine TOURBI\AppData\Local\Programs\Python\Python314\python.exe
+[0m21:36:58.965389 [info ] [MainThread]: os info: Windows-11-10.0.26200-SP0
+[0m21:36:59.037783 [info ] [MainThread]: Using profiles dir at C:\Users\Yassine TOURBI\Desktop\HAKATHON PARIS\DEV
+[0m21:36:59.038323 [info ] [MainThread]: Using profiles.yml file at C:\Users\Yassine TOURBI\Desktop\HAKATHON PARIS\DEV\profiles.yml
+[0m21:36:59.038684 [info ] [MainThread]: Using dbt_project.yml file at C:\Users\Yassine TOURBI\Desktop\HAKATHON PARIS\DEV\dbt_project.yml
+[0m21:36:59.040259 [info ] [MainThread]: adapter type: postgres
+[0m21:36:59.040630 [info ] [MainThread]: adapter version: 1.11.0
+[0m21:36:59.137058 [info ] [MainThread]: Configuration:
+[0m21:36:59.137582 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m21:36:59.137953 [info ] [MainThread]:   dbt_project.yml file [[32mOK found and valid[0m]
+[0m21:36:59.138288 [info ] [MainThread]: Required dependencies:
+[0m21:36:59.138637 [debug] [MainThread]: Executing "git --help"
+[0m21:36:59.172833 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   history    EXPERIMENTAL: Rewrite history\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Set `HEAD` or the index to a known state\n   switch     Switch branches\n   tag        Create, list, delete or verify tags\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m21:36:59.173348 [debug] [MainThread]: STDERR: "b''"
+[0m21:36:59.173718 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m21:36:59.174061 [info ] [MainThread]: Connection:
+[0m21:36:59.174456 [info ] [MainThread]:   host: localhost
+[0m21:36:59.174797 [info ] [MainThread]:   port: 5432
+[0m21:36:59.175111 [info ] [MainThread]:   user: postgres
+[0m21:36:59.175439 [info ] [MainThread]:   database: postgres
+[0m21:36:59.175744 [info ] [MainThread]:   schema: prod_hakathon
+[0m21:36:59.176016 [info ] [MainThread]:   connect_timeout: 10
+[0m21:36:59.176290 [info ] [MainThread]:   role: None
+[0m21:36:59.176556 [info ] [MainThread]:   search_path: None
+[0m21:36:59.176819 [info ] [MainThread]:   keepalives_idle: 0
+[0m21:36:59.177148 [info ] [MainThread]:   sslmode: None
+[0m21:36:59.177450 [info ] [MainThread]:   sslcert: None
+[0m21:36:59.177714 [info ] [MainThread]:   sslkey: None
+[0m21:36:59.178035 [info ] [MainThread]:   sslrootcert: None
+[0m21:36:59.178330 [info ] [MainThread]:   application_name: dbt
+[0m21:36:59.178615 [info ] [MainThread]:   autocommit: False
+[0m21:36:59.178879 [info ] [MainThread]:   retries: 1
+[0m21:36:59.179359 [info ] [MainThread]: Registered adapter: postgres=1.11.0
+[0m21:36:59.449698 [debug] [MainThread]: Acquiring new postgres connection 'debug'
+[0m21:36:59.516502 [debug] [MainThread]: Using postgres connection "debug"
+[0m21:36:59.516846 [debug] [MainThread]: On debug: select 1 as id
+[0m21:36:59.517071 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m21:36:59.579134 [debug] [MainThread]: SQL status: SELECT 1 in 0.062 seconds
+[0m21:36:59.579990 [debug] [MainThread]: On debug: Close
+[0m21:36:59.580290 [info ] [MainThread]:   Connection test: [[32mOK connection ok[0m]
+
+[0m21:36:59.580667 [info ] [MainThread]: [32mAll checks passed![0m
+[0m21:36:59.581521 [debug] [MainThread]: Command `dbt debug` succeeded at 21:36:59.581419 after 0.78 seconds
+[0m21:36:59.581783 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m21:36:59.582061 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001986E57B490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001986B37BE30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001986967C6B0>]}
+[0m21:36:59.582384 [debug] [MainThread]: Flushing usage events
+[0m21:37:00.317900 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m21:42:58.316640 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000026287D85400>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000262858C4CD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002628A71BC50>]}
+
+
+============================== 21:42:58.320904 | 7cf8f6ef-de6e-475f-8169-52f533261725 ==============================
+[0m21:42:58.320904 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m21:42:58.321417 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'no_print': 'None', 'maximum_seed_size_mib': '1', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'version_check': 'True', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'log_format': 'default', 'debug': 'False', 'fail_fast': 'False', 'profiles_dir': 'c:\\Users\\Yassine TOURBI\\Desktop\\HAKATHON PARIS\\DEV\\hakathon_mobilite', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'indirect_selection': 'eager', 'hints_enabled': 'True', 'invocation_command': 'dbt ', 'use_experimental_parser': 'False', 'use_colors': 'True', 'log_path': 'c:\\Users\\Yassine TOURBI\\Desktop\\HAKATHON PARIS\\DEV\\hakathon_mobilite\\logs'}
+[0m21:42:58.321736 [debug] [MainThread]: Tracking: tracking
+[0m21:42:58.461092 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '7cf8f6ef-de6e-475f-8169-52f533261725', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002628A53FA80>]}
+[0m21:42:58.486052 [info ] [MainThread]: Warning: No packages were found in packages.yml
+[0m21:42:58.487077 [info ] [MainThread]: Warning: No packages were found in packages.yml
+[0m21:42:58.488107 [debug] [MainThread]: Command `cli deps` succeeded at 21:42:58.487992 after 0.38 seconds
+[0m21:42:58.488423 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000262858C99D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002628A96D370>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002628A4FBD50>]}
+[0m21:42:58.488730 [debug] [MainThread]: Flushing usage events
+[0m21:42:58.947693 [debug] [MainThread]: An error was encountered while trying to flush usage events
