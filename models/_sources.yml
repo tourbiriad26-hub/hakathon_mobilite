@@ -1,0 +1,12 @@
+version: 2
+
+# Tables brutes chargées dans PostgreSQL (schéma sources_hakathon) à partir des fichiers téléchargés.
+# Adapter les noms de tables au moment de l'import.
+sources:
+  - name: insee
+    schema: sources_hakathon
+    tables:
+      - name: appartenance_geo_com_2025   # Table d'appartenance géographique des communes (COG INSEE)
+      - name: libelles_supracom_2025      # Onglet "Zones supra-communales" du même fichier (nivgeo, codgeo, libgeo)
+      - name: fd_mobpro_2022              # Fichier détail MOBPRO - RP 2022 (domicile-travail)
+      - name: filosofi_com           # Filosofi - indicateurs à la commune
