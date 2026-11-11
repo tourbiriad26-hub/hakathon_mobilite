@@ -158,7 +158,7 @@ resize((width) => barresClassees(visibles, {
   valeur: critere, nom: "libgeo", width,
   etiquette: (d) => `${fmtCritere(d[critere])}${d === E ? `  (rang ${classement.indexOf(d) + 1} sur ${classement.length})` : ""}`,
   couleur: (d) => (d === E ? IDFM.encre : IDFM.bleu),
-  max: nbBarres + 1, margeGauche: Math.min(300, width * 0.4), margeDroite: 170, longueurNom: 44,
+  max: nbBarres + 1, margeGauche: Math.min(280, width * 0.38), margeDroite: 170,
   surClic: (d) => choisirEpci(d.codegeo)
 }))
 ```

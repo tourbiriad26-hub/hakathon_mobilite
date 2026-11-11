@@ -188,18 +188,30 @@ SELECT jour, nb_validations FROM fact_validations_jour ORDER BY jour
 ```
 
 ```js
+// Les dates arrivent de DuckDB sous forme de nombre (millisecondes) : on les convertit en vraies dates,
+// sinon l'axe affiche des nombres bruts.
+const lignesJours = jours.toArray().map((d) => ({jour: new Date(d.jour), nb_validations: d.nb_validations}));
+const moisFr = d3.timeFormatLocale({dateTime: "%A %e %B %Y à %X", date: "%d/%m/%Y", time: "%H:%M:%S", periods: ["AM", "PM"],
+  days: ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"], shortDays: ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."],
+  months: ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
+  shortMonths: ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]});
+const formatMois = moisFr.format("%b %Y");
+```
+
+```js
 resize((width) => Plot.plot({
   width,
   height: 350,
-  marginLeft: 50,
-  style: {fontSize: "12px"},
-  x: {label: null},
+  marginLeft: 55,
+  marginBottom: 36,
+  style: {fontSize: "13px"},
+  x: {label: null, type: "utc", tickFormat: formatMois, ticks: d3.utcMonth.every(width < 700 ? 3 : width < 1000 ? 2 : 1)},
   y: {label: "Validations par jour (moyenne sur 7 jours)", tickFormat: fmtCompact, grid: true},
   marks: [
-    Plot.lineY(jours, Plot.windowY({k: 7, anchor: "end", strict: true}, {x: "jour", y: "nb_validations", stroke: IDFM.bleu, strokeWidth: 2.5})),
+    Plot.lineY(lignesJours, Plot.windowY({k: 7, anchor: "end", strict: true}, {x: "jour", y: "nb_validations", stroke: IDFM.bleu, strokeWidth: 2.5})),
     Plot.ruleY([0], {stroke: IDFM.grisClair}),
-    Plot.ruleX(jours, Plot.pointerX({x: "jour", stroke: IDFM.grisClair})),
-    Plot.tip(jours, Plot.pointerX({x: "jour", y: "nb_validations", title: (d) => `${new Date(d.jour).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long", year: "numeric"})}\n${fmtInt(d.nb_validations)} validations ce jour-là`}))
+    Plot.ruleX(lignesJours, Plot.pointerX({x: "jour", stroke: IDFM.grisClair})),
+    Plot.tip(lignesJours, Plot.pointerX({x: "jour", y: "nb_validations", title: (d) => `${d.jour.toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long", year: "numeric"})}\n${fmtInt(d.nb_validations)} validations ce jour-là`}))
   ]
 }))
 ```

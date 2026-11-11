@@ -214,17 +214,24 @@ form[class^="inputs-"] input[type="checkbox"] {
   accent-color: var(--idfm-bleu);
 }
 
-/* Graphiques : texte gris, légendes lisibles */
+/* Graphiques : texte lisible (13 px minimum), encre foncée pour les étiquettes */
 figure svg,
 .card svg {
-  font-size: 11px;
-  color: var(--idfm-texte-2);
+  font-size: 13px;
+  color: var(--idfm-encre);
 }
 
 figure > div[class$="-swatches"],
-.card div[class$="-swatches"] {
+.card div[class$="-swatches"],
+figure > div[class$="-ramp"],
+.card div[class$="-ramp"] {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+/* Légende des cartes (dégradé) : chiffres plus grands */
+.card div[class$="-ramp"] svg {
   font-size: 12px;
-  margin-bottom: 6px;
 }
 
 /* ------------------------------------------------------------------

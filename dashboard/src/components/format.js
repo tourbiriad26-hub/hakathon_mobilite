@@ -38,6 +38,19 @@ export function toFeatureCollection(rows) {
   return {type: "FeatureCollection", features};
 }
 
+// Libellé court d'un territoire pour les axes de graphiques : les intitulés administratifs
+// prennent toute la place ("Communauté d'agglomération Roissy Pays de France" -> "CA Roissy Pays de France").
+export function nomCourt(libelle) {
+  return String(libelle ?? "")
+    .replace(/^Communauté d'agglomération (de |du |des |d')?/i, "CA ")
+    .replace(/^Communauté de communes (de |du |des |d'|de la |de l')?/i, "CC ")
+    .replace(/^Communauté urbaine (de |du |des |d')?/i, "CU ")
+    .replace(/^Métropole du Grand Paris$/i, "Métropole du Grand Paris")
+    .replace(/ \((EPT \d+|T\d+|CA[A-Z]+|CC[A-Z]+)\)$/i, "")
+    .replace(/^(T\d+) /, "$1 · ")
+    .trim();
+}
+
 // Carte (Map) codegeo -> valeur à partir d'un résultat SQL.
 export function indexBy(rows, key, value) {
   const m = new Map();

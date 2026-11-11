@@ -14,7 +14,7 @@ const sql = DuckDBClient.sql(tablesCompletes({
 
 ```js
 import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy} from "./components/format.js";
-import {IDFM, carte, echelleCarte, barresClassees} from "./components/graphiques.js";
+import {IDFM, carte, echelleCarte, barresClassees, etiquettesCarte} from "./components/graphiques.js";
 import {recherche} from "./components/filtres.js";
 import {lexique} from "./components/lexique.js";
 import {piedSources} from "./components/sources.js";
@@ -107,22 +107,25 @@ const libMesure = [...mesures].find(([, code]) => code === mesure)[0];
 const fmtMesure = (v) => (v == null ? "non disponible" : mesure === "projets" ? `${fmtInt(v)} embauches` : fmtPct(v));
 ```
 
-<div class="grid grid-cols-2">
-<div class="card">
+<div class="grid grid-cols-3">
+<div class="card grid-colspan-2">
 
 ```js
 resize((width) => carte({
   fc: fcBassins, fcDep, width,
+  hauteur: Math.min(620, Math.max(420, width * 0.78)),
   valeur: (f) => parCode.get(f.properties.codegeo)?.[mesure] ?? null,
   couleur: echelleCarte(lignesBassins.map((d) => d[mesure]), {label: libMesure}),
   titre: (f) => `${f.properties.libgeo}\n${fmtMesure(parCode.get(f.properties.codegeo)?.[mesure])}\nCliquez pour voir les métiers`,
   contour: 1,
   selection: codeBassin,
+  // Le nom de chaque bassin est écrit sur la carte (nom court : "T4 · Paris Ouest La Défense").
+  marques: width >= 520 ? [etiquettesCarte(lignesBassins, {taille: width >= 800 ? 11 : 9})] : [],
   surClic: (p) => choisirBassin(p.codegeo)
 }))
 ```
 
-<div class="note"><b>Comment lire cette carte.</b> Chaque zone est un bassin d'emploi. Plus le bleu est foncé, plus la valeur de l'indicateur choisi est élevée. Passez la souris pour lire le nom et la valeur, cliquez pour choisir un bassin (entouré en noir).</div>
+<div class="note"><b>Comment lire cette carte.</b> Chaque zone est un bassin d'emploi, avec son nom. Plus le bleu est foncé, plus la valeur de l'indicateur choisi est élevée. Passez la souris pour lire la valeur, cliquez pour choisir un bassin (entouré en noir).</div>
 
 </div>
 <div class="card">
@@ -132,7 +135,7 @@ resize((width) => barresClassees(lignesBassins, {
   valeur: mesure, nom: "libgeo", width,
   etiquette: (d) => fmtMesure(d[mesure]),
   couleur: (d) => (d.codegeo === codeBassin ? IDFM.encre : IDFM.bleu),
-  max: 10, margeGauche: 190, margeDroite: 120,
+  max: 10, margeGauche: Math.min(170, width * 0.42), margeDroite: 115,
   surClic: (d) => choisirBassin(d.codegeo)
 }))
 ```
@@ -168,7 +171,7 @@ LIMIT 10
 resize((width) => barresClassees(metiers, {
   valeur: "projets", nom: "metier", width,
   etiquette: (d) => `${fmtInt(d.projets)} embauches, dont ${d.part_difficiles == null ? "–" : Math.round(d.part_difficiles) + " %"} difficiles`,
-  max: 10, margeGauche: Math.min(300, width * 0.42), margeDroite: 220, longueurNom: 44
+  max: 10, margeGauche: Math.min(320, width * 0.4), margeDroite: 230
 }))
 ```
 
