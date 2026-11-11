@@ -58,11 +58,14 @@ emplois AS (
 {% endfor %}
 ),
 
+-- FULL JOIN : un territoire qui a des emplois mais aucun actif résident (zone d'activité, aéroport...)
+-- garde son nb_emplois ; ses indicateurs "résidents" sont NULL et filtrés plus bas.
 fact_mobpro AS (
-    SELECT r.maille, r.codegeo, v.code_indicateur, v.nombre, v.effectif_base,
+    SELECT COALESCE(r.maille, e.maille) AS maille, COALESCE(r.codegeo, e.codegeo) AS codegeo,
+           v.code_indicateur, v.nombre, v.effectif_base,
            {{ var('annee_mobpro') }} AS annee, 'RP {{ var('annee_mobpro') }}' AS periode
     FROM residents r
-    LEFT JOIN emplois e ON e.maille = r.maille AND e.codegeo = r.codegeo
+    FULL OUTER JOIN emplois e ON e.maille = r.maille AND e.codegeo = r.codegeo
     CROSS JOIN LATERAL (VALUES
         ('nb_actifs_occupes',           r.nb_actifs,                                                   r.nb_actifs),
         ('nb_navetteurs',               r.nb_navetteurs,                                               r.nb_navetteurs),
