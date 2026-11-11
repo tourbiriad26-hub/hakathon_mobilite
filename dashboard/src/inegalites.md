@@ -45,11 +45,11 @@ const axeY = view(Inputs.select(new Map([
   ["Part modale vélo (%)", "part_velo"],
   ["Actifs dont le ménage n'a pas de voiture (%)", "part_sans_voiture"],
   ["Part travaillant hors du département (%)", "part_hors_departement"]
-]), {label: "Ce qu'on compare", value: "part_voiture"}));
+]), {label: "Axe vertical", value: "part_voiture"}));
 const axeX = view(Inputs.select(new Map([
   ["Niveau de vie médian (€ / an)", "mediane"],
   ["Taux de pauvreté (%)", "taux_pauvrete"]
-]), {label: "Classer les communes selon", value: "mediane"}));
+]), {label: "Axe horizontal", value: "mediane"}));
 const depsChoisis = view(Inputs.checkbox(nomsDep, {label: "Départements", value: [...nomsDep.values()], format: ([k, v]) => `${k} ${v}`}));
 ```
 
@@ -57,14 +57,6 @@ const depsChoisis = view(Inputs.checkbox(nomsDep, {label: "Départements", value
 const rows = communes.toArray().filter((d) => d[axeX] != null && d[axeY] != null && depsChoisis.includes(nomsDep.get(d.departement)));
 const libX = axeX === "mediane" ? "Niveau de vie médian (€ / an, 2021)" : "Taux de pauvreté (%, 2021)";
 const libY = {part_voiture: "Voiture (%)", part_tc: "Transports en commun (%)", part_velo: "Vélo (%)", part_sans_voiture: "Ménages sans voiture (%)", part_hors_departement: "Travaillent hors département (%)"}[axeY];
-// Communes rangées en 5 groupes de même taille, de la plus modeste à la plus aisée.
-const tri = rows.slice().sort((a, b) => axeX === "mediane" ? a.mediane - b.mediane : b.taux_pauvrete - a.taux_pauvrete);
-const nomsGroupes = ["😟 20 % des communes les plus modestes", "Plutôt modestes", "Dans la moyenne", "Plutôt aisées", "😊 20 % des communes les plus aisées"];
-const groupes = nomsGroupes.map((groupe, q) => {
-  const g = tri.slice(Math.floor(q * tri.length / 5), Math.floor((q + 1) * tri.length / 5));
-  const actifs = d3.sum(g, (d) => d.nb_actifs);
-  return {groupe, n: g.length, actifs, valeur: actifs ? d3.sum(g, (d) => d[axeY] * d.nb_actifs) / actifs : null};
-});
 ```
 
 <div class="card">
@@ -72,23 +64,25 @@ const groupes = nomsGroupes.map((groupe, q) => {
 ```js
 Plot.plot({
   width,
-  height: 340,
-  marginLeft: 260,
-  // marge à droite pour que l'étiquette de la plus longue barre ne soit pas coupée
-  x: {label: `${libY} — moyenne du groupe`, grid: true, domain: [0, (d3.max(groupes, (d) => d.valeur) ?? 0) * 1.15]},
-  y: {label: null, domain: groupes.map((d) => d.groupe)},
-  // dégradé qui reste bien visible sur fond clair comme sur fond sombre
-  color: {type: "linear", range: ["#93c5fd", "#1e3a8a"]},
+  height: 520,
+  grid: true,
+  x: {label: libX, tickFormat: axeX === "mediane" ? fmtCompact : undefined},
+  y: {label: libY},
+  r: {range: [1.5, 22]},
+  color: {domain: [...nomsDep.values()], range: [...nomsDep.keys()].map((k) => couleursDep.get(k)), legend: true},
   marks: [
-    Plot.barX(groupes, {x: "valeur", y: "groupe", fill: "valeur", tip: true,
-      title: (d) => `${d.groupe}\n${libY} : ${fmtPct(d.valeur)}\n${d.n} communes · ${fmtInt(d.actifs)} actifs`}),
-    Plot.text(groupes, {x: "valeur", y: "groupe", text: (d) => fmtPct(d.valeur), dx: 6, textAnchor: "start", fontSize: 14, fontWeight: "bold", fill: "currentColor"}),
-    Plot.ruleX([0])
+    Plot.dot(rows, {
+      x: axeX, y: axeY, r: "nb_actifs",
+      fill: (d) => nomsDep.get(d.departement), fillOpacity: 0.55, stroke: "white", strokeWidth: 0.4,
+      tip: true,
+      title: (d) => `${d.libgeo} (${d.departement})\n${libX.split(" (")[0]} : ${axeX === "mediane" ? fmtEur(d.mediane) : fmtPct(d.taux_pauvrete)}\n${libY.split(" (")[0]} : ${fmtPct(d[axeY])}\n${fmtInt(d.nb_actifs)} actifs · ${d.nb_gares ?? 0} pôle(s) ferré(s)`
+    }),
+    Plot.linearRegressionY(rows, {x: axeX, y: axeY, stroke: "#111", strokeDasharray: "4 3", ci: 0})
   ]
 })
 ```
 
-<div class="note">Les communes affichées sont réparties en 5 groupes de même taille, de la plus modeste à la plus aisée. Chaque barre donne la moyenne du groupe, pondérée par le nombre d'actifs. C'est une association, pas une causalité : la desserte ferrée, la densité et la localisation des emplois jouent ensemble.</div>
+<div class="note">La droite en pointillés est une régression linéaire simple sur les communes affichées. Elle décrit une association, pas une causalité : la desserte ferrée, la densité et la localisation des emplois jouent ensemble.</div>
 
 </div>
 

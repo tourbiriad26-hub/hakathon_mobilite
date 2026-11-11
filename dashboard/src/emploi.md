@@ -114,27 +114,22 @@ Plot.plot({
 ```js
 Plot.plot({
   width,
-  height: Math.max(420, rows.length * 22),
-  marginLeft: 170,
-  x: {label: "Part des résidents allant travailler en transports en commun (%)", domain: [0, 100], grid: true},
-  y: {label: null},
-  color: {domain: ["Attire des travailleurs (plus d'emplois que d'actifs)", "Plutôt résidentiel"], range: ["#ea580c", "#1d4ed8"], legend: true},
+  height: Math.min(560, width * 0.9),
+  grid: true,
+  x: {label: "Emplois pour 100 actifs résidents (RP 2022)"},
+  y: {label: "Part modale TC des résidents (%)"},
+  r: {range: [4, 32], label: "Projets de recrutement"},
+  color: {domain: [...nomsDep.values()], range: [...nomsDep.keys()].map((k) => couleursDep.get(k)), legend: true},
   marks: [
-    Plot.barX(rows.filter((d) => d.part_tc != null), {
-      x: "part_tc",
-      y: (d) => d.libgeo.replace(/ \(.*\)$/, ""),
-      fill: (d) => d.concentration > 100 ? "Attire des travailleurs (plus d'emplois que d'actifs)" : "Plutôt résidentiel",
-      sort: {y: "-x"},
-      tip: true,
-      title: (d) => `${d.libgeo}\nTC ${fmtPct(d.part_tc)} · ${d.concentration?.toFixed(0)} emplois / 100 actifs\n${fmtCompact(d.projets)} projets (${fmtPct(d.part_difficiles)} difficiles)`
-    }),
-    Plot.text(rows.filter((d) => d.part_tc != null), {x: "part_tc", y: (d) => d.libgeo.replace(/ \(.*\)$/, ""), text: (d) => fmtPct(d.part_tc), dx: 4, textAnchor: "start", fontSize: 10}),
-    Plot.ruleX([0])
+    Plot.ruleX([100], {stroke: "#999", strokeDasharray: "3 3"}),
+    Plot.dot(rows, {x: "concentration", y: "part_tc", r: "projets", fill: (d) => nomsDep.get(d.departement), fillOpacity: 0.65, stroke: "white", tip: true,
+      title: (d) => `${d.libgeo}\n${d.concentration?.toFixed(0)} emplois / 100 actifs · TC ${fmtPct(d.part_tc)}\n${fmtCompact(d.projets)} projets (${fmtPct(d.part_difficiles)} difficiles)`}),
+    Plot.text(rows, {x: "concentration", y: "part_tc", text: (d) => d.libgeo.replace(/ \(.*\)$/, "").replace(/^(T\d+) .*/, "$1"), dy: -14, fontSize: 9, fill: "#333"})
   ]
 })
 ```
 
-<div class="note">Plus la barre est courte, plus les habitants du bassin dépendent de la voiture. En orange, les bassins qui accueillent plus d'emplois qu'ils n'ont d'actifs : ils font venir des navetteurs. Un bassin orange avec une barre courte (Roissy, Versailles-Saclay, Marne-la-Vallée…) est un pôle d'emploi difficile d'accès sans voiture.</div>
+<div class="note">À droite de la ligne pointillée, le bassin accueille plus d'emplois qu'il n'a d'actifs : il dépend des navetteurs. En bas, ses résidents y vont peu en transports en commun. Les bassins « en bas à droite » (Roissy, Versailles-Saclay, Marne-la-Vallée) sont ceux où l'accès à l'emploi sans voiture est le plus contraint.</div>
 
 </div>
 </div>
