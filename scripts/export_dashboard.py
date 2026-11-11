@@ -59,6 +59,15 @@ def main() -> int:
         path = OUT / f"{name}.parquet"
         con.execute(f"COPY (SELECT {select} FROM {schema}.{table}) TO '{path.as_posix()}' (FORMAT parquet, COMPRESSION zstd)")
         n = con.execute(f"SELECT count(*) FROM {schema}.{table}").fetchone()[0]
+        # Contrôle d'intégrité : un Parquet valide commence et finit par PAR1, et se relit en entier.
+        data = path.read_bytes()
+        if data[:4] != b"PAR1" or data[-4:] != b"PAR1":
+            print(f"[export] ERREUR : {path.name} corrompu (en-tête {data[:4]!r}, fin {data[-4:]!r})", file=sys.stderr)
+            return 1
+        relu = con.execute(f"SELECT count(*) FROM read_parquet('{path.as_posix()}')").fetchone()[0]
+        if relu != n:
+            print(f"[export] ERREUR : {path.name} relu avec {relu} lignes au lieu de {n}", file=sys.stderr)
+            return 1
         print(f"[export] {path.relative_to(ROOT)}  {n:>9,} lignes  {path.stat().st_size / 1e6:6.2f} Mo".replace(",", " "))
     return 0
 
