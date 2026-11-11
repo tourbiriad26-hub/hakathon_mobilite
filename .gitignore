@@ -10,9 +10,9 @@ logs/
 .user.yml
 package-lock.yml
 
-# Données (re-générées par scripts/ingest.py et dbt)
+# Données brutes (re-téléchargées par scripts/ingest.py). Les Parquet normalisés de data/parquet/
+# sont versionnés (~17 Mo) : le build reste possible même si une source est indisponible.
 data/raw/
-data/parquet/
 data/*.duckdb
 data/*.duckdb.wal
 

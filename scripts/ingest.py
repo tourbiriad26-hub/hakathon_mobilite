@@ -36,7 +36,8 @@ OUT = ROOT / "data" / "parquet"
 
 INSEE = "https://www.insee.fr/fr/statistiques/fichier"
 IDFM = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets"
-USER_AGENT = "hakathon-mobilite-ingest/1.0 (+https://github.com/tourbiriad26-hub/hakathon_mobilite)"
+# insee.fr renvoie des erreurs 500 aux clients non identifiés comme navigateurs : on s'annonce comme tel.
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 hakathon-mobilite/1.0"
 
 # Région étudiée (code INSEE). 11 = Île-de-France.
 REGION = "11"

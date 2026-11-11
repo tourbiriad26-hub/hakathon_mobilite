@@ -48,8 +48,17 @@ jobs:
           key: insee-${{ hashFiles('scripts/ingest.py') }}-${{ github.run_id }}
           restore-keys: insee-${{ hashFiles('scripts/ingest.py') }}-
 
+      # Les Parquet normalisés sont versionnés dans data/parquet/ : si une source est injoignable
+      # (insee.fr renvoie parfois des 500 aux runners), on garde la version du dépôt et on continue.
       - name: Ingestion des données ouvertes
-        run: python scripts/ingest.py
+        run: |
+          set +e
+          python scripts/ingest.py
+          status=$?
+          set -e
+          if [ $status -ne 0 ]; then
+            echo "::warning::Ingestion incomplète (code $status) : les fichiers Parquet versionnés sont utilisés pour les sources manquantes."
+          fi
 
       - name: dbt build (modèles + tests)
         run: dbt build --profiles-dir . --target dev
