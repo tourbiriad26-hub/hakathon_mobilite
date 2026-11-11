@@ -45,27 +45,23 @@ export function indexBy(rows, key, value) {
   return m;
 }
 
-// Une couleur par mode, la même sur toutes les pages (barres, légendes, cartes).
+// Couleurs des modes, d'après le code couleur d'Île-de-France Mobilités : le bleu IDFM pour les
+// transports en commun (le sujet du dashboard), des gris bleutés pour les autres modes.
 export const couleursModes = new Map([
-  ["Transports en commun", "#1d4ed8"], ["Voiture", "#ea580c"], ["Vélo", "#16a34a"],
-  ["Marche", "#9333ea"], ["Deux-roues motorisé", "#64748b"], ["Sans déplacement", "#cbd5e1"]
+  ["Transports en commun", "#0268d5"], ["Voiture", "#25303b"], ["Vélo", "#7fb2ea"],
+  ["Marche", "#a9b4c2"], ["Deux-roues motorisé", "#6b7785"], ["Sans déplacement", "#e0e5ec"]
 ]);
 
-// Palette de carte selon le sens de l'indicateur :
-// - une part modale prend la teinte de son mode (TC bleu, voiture orange, vélo vert...) ;
-// - un indicateur « défavorable » (pauvreté, chômage, recrutements difficiles, inégalités) va vers le rouge ;
-// - les autres (effectifs, revenus, emplois, gares) restent en bleus.
-const schemeModes = {part_tc: "blues", part_voiture: "oranges", part_velo: "greens", part_marche: "purples", part_2rm: "greys", part_sans_transport: "greys"};
-const indicateursDefavorables = new Set(["taux_pauvrete", "taux_chomage", "rapport_interdecile", "part_recrutements_difficiles", "difficiles", "part_difficiles"]);
-export function schemeIndicateur(code) {
-  if (schemeModes[code]) return schemeModes[code];
-  if (indicateursDefavorables.has(code)) return "reds";
+// Cartes choroplèthes : une seule gamme (bleus) pour tous les indicateurs, pour un rendu sobre.
+// Le sens de lecture (favorable / défavorable) est donné par le libellé de la légende.
+export function schemeIndicateur() {
   return "blues";
 }
 
+// Départements : nuances de bleu et de gris de la charte IDFM (pas d'arc-en-ciel).
 export const couleursDep = new Map([
-  ["75", "#1d4ed8"], ["92", "#0891b2"], ["93", "#dc2626"], ["94", "#ea580c"],
-  ["77", "#65a30d"], ["78", "#7c3aed"], ["91", "#ca8a04"], ["95", "#db2777"]
+  ["75", "#0268d5"], ["92", "#5a9be6"], ["93", "#c52625"], ["94", "#25303b"],
+  ["77", "#a9b4c2"], ["78", "#1b4f8a"], ["91", "#7fb2ea"], ["95", "#6b7785"]
 ]);
 
 export const nomsDep = new Map([

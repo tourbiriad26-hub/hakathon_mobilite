@@ -1,9 +1,15 @@
 ---
 title: Sources & méthode
-sql:
-  dim_indicateurs: ./data/dim_indicateurs.parquet
-  catalogue_sources: ./data/catalogue_sources.parquet
 ---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  dim_indicateurs: FileAttachment("./data/dim_indicateurs.parquet"),
+  catalogue_sources: FileAttachment("./data/catalogue_sources.parquet")
+}));
+```
 
 # Sources de données et méthode
 

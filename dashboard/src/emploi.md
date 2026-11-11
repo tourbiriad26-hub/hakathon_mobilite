@@ -1,10 +1,16 @@
 ---
 title: Emploi & bassins
-sql:
-  fact_mobilite: ./data/fact_mobilite.parquet
-  dim_geo: ./data/dim_geo.parquet
-  fact_bmo: ./data/fact_bmo.parquet
 ---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  fact_mobilite: FileAttachment("./data/fact_mobilite.parquet"),
+  dim_geo: FileAttachment("./data/dim_geo.parquet"),
+  fact_bmo: FileAttachment("./data/fact_bmo.parquet")
+}));
+```
 
 # Où l'emploi se crée-t-il, et peut-on y aller sans voiture ?
 
@@ -102,8 +108,8 @@ Plot.plot({
   marks: [
     Plot.geo(fc, {fill: (f) => byCode.get(f.properties.codegeo)?.[mesure] ?? null, stroke: "white", strokeWidth: 1, tip: true,
       title: (f) => { const b = byCode.get(f.properties.codegeo); return `${b.libgeo}\n${libMesure} : ${fmtM(b[mesure])}\n${fmtCompact(b.projets)} projets · ${fmtPct(b.part_difficiles)} difficiles\n${b.concentration?.toFixed(0)} emplois / 100 actifs · TC ${fmtPct(b.part_tc)} · ${b.gares ?? 0} pôles ferrés`; }}),
-    Plot.geo(fcDep, {stroke: "#333", strokeWidth: 0.6, fill: "none"}),
-    Plot.text(rows, {x: "lon", y: "lat", text: (d) => d.libgeo.replace(/ \(.*\)$/, "").replace(/^(T\d+) .*/, "$1"), fontSize: 9, fill: "#111", stroke: "white", strokeWidth: 2.5})
+    Plot.geo(fcDep, {stroke: "#4e5864", strokeWidth: 0.6, fill: "none"}),
+    Plot.text(rows, {x: "lon", y: "lat", text: (d) => d.libgeo.replace(/ \(.*\)$/, "").replace(/^(T\d+) .*/, "$1"), fontSize: 9, fill: "#25303b", stroke: "white", strokeWidth: 2.5})
   ]
 })
 ```
@@ -121,10 +127,10 @@ Plot.plot({
   r: {range: [4, 32], label: "Projets de recrutement"},
   color: {domain: [...nomsDep.values()], range: [...nomsDep.keys()].map((k) => couleursDep.get(k)), legend: true},
   marks: [
-    Plot.ruleX([100], {stroke: "#999", strokeDasharray: "3 3"}),
+    Plot.ruleX([100], {stroke: "#a9b4c2", strokeDasharray: "3 3"}),
     Plot.dot(rows, {x: "concentration", y: "part_tc", r: "projets", fill: (d) => nomsDep.get(d.departement), fillOpacity: 0.65, stroke: "white", tip: true,
       title: (d) => `${d.libgeo}\n${d.concentration?.toFixed(0)} emplois / 100 actifs · TC ${fmtPct(d.part_tc)}\n${fmtCompact(d.projets)} projets (${fmtPct(d.part_difficiles)} difficiles)`}),
-    Plot.text(rows, {x: "concentration", y: "part_tc", text: (d) => d.libgeo.replace(/ \(.*\)$/, "").replace(/^(T\d+) .*/, "$1"), dy: -14, fontSize: 9, fill: "#333"})
+    Plot.text(rows, {x: "concentration", y: "part_tc", text: (d) => d.libgeo.replace(/ \(.*\)$/, "").replace(/^(T\d+) .*/, "$1"), dy: -14, fontSize: 9, fill: "#4e5864"})
   ]
 })
 ```
@@ -177,7 +183,7 @@ Plot.plot({
   marginLeft: 260,
   x: {label: "Projets de recrutement 2026", tickFormat: fmtCompact},
   y: {label: null},
-  color: {legend: true, domain: ["Difficiles", "Autres"], range: ["#dc2626", "#93c5fd"]},
+  color: {legend: true, domain: ["Difficiles", "Autres"], range: ["#c52625", "#c9ddf5"]},
   marks: [
     Plot.barX(metiers.toArray().flatMap((d) => [{metier: d.metier, type: "Difficiles", n: d.difficiles ?? 0, p: d.part_difficiles}, {metier: d.metier, type: "Autres", n: (d.projets ?? 0) - (d.difficiles ?? 0), p: d.part_difficiles}]),
       {x: "n", y: "metier", fill: "type", sort: {y: "-x"}, tip: true, title: (d) => `${d.metier}\n${d.type} : ${fmtInt(d.n)} (${fmtPct(d.p)} jugés difficiles)`}),
@@ -197,8 +203,8 @@ Plot.plot({
   x: {label: "Projets de recrutement 2026", tickFormat: fmtCompact},
   y: {label: null},
   marks: [
-    Plot.barX(familles, {x: "projets", y: "famille", sort: {y: "-x"}, fill: "#1d4ed8", tip: true, title: (d) => `${d.famille}\n${fmtInt(d.projets)} projets · ${fmtPct(100 * d.difficiles / d.projets)} difficiles`}),
-    Plot.text(familles, {x: "projets", y: "famille", text: (d) => fmtPct(100 * d.difficiles / d.projets), dx: 4, textAnchor: "start", fontSize: 10, fill: "#555"}),
+    Plot.barX(familles, {x: "projets", y: "famille", sort: {y: "-x"}, fill: "#0268d5", tip: true, title: (d) => `${d.famille}\n${fmtInt(d.projets)} projets · ${fmtPct(100 * d.difficiles / d.projets)} difficiles`}),
+    Plot.text(familles, {x: "projets", y: "famille", text: (d) => fmtPct(100 * d.difficiles / d.projets), dx: 4, textAnchor: "start", fontSize: 10, fill: "#4e5864"}),
     Plot.ruleX([0])
   ]
 })
@@ -245,7 +251,7 @@ Plot.plot({
   x: {label: `Demandeurs d'emploi (cat. A, fin ${ze.get(0)?.periode ?? ""})`, tickFormat: fmtCompact},
   y: {label: null},
   marks: [
-    Plot.barX(ze, {x: "demandeurs_a", y: "libgeo", sort: {y: "-x"}, fill: "#1d4ed8", tip: true,
+    Plot.barX(ze, {x: "demandeurs_a", y: "libgeo", sort: {y: "-x"}, fill: "#0268d5", tip: true,
       title: (d) => `${d.libgeo}\n${fmtInt(d.demandeurs_a)} en catégorie A · ${fmtInt(d.demandeurs_abc)} en A, B, C\nchômage ${fmtPct(d.taux_chomage)} · ${fmtPct(d.part_sans_voiture)} des actifs sans voiture`}),
     Plot.ruleX([0])
   ]
@@ -262,7 +268,7 @@ Plot.plot({
   marginLeft: 150,
   x: {label: `Taux de chômage (%, ${dep.get(0)?.periode ?? ""})`},
   y: {label: null},
-  color: {type: "linear", scheme: "reds", domain: [0, d3.max(dep, (d) => d.taux_chomage)]},
+  color: {type: "linear", scheme: "blues", domain: [0, d3.max(dep, (d) => d.taux_chomage)]},
   marks: [
     Plot.barX(dep, {x: "taux_chomage", y: "libgeo", sort: {y: "-x"}, fill: "taux_chomage", tip: true,
       title: (d) => `${d.libgeo}\nchômage ${fmtPct(d.taux_chomage)}\n${fmtCompact(d.projets)} projets de recrutement 2026, ${fmtPct(d.part_difficiles)} difficiles`}),

@@ -1,9 +1,15 @@
 ---
 title: Inégalités & mobilité
-sql:
-  fact_mobilite: ./data/fact_mobilite.parquet
-  dim_geo: ./data/dim_geo.parquet
 ---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  fact_mobilite: FileAttachment("./data/fact_mobilite.parquet"),
+  dim_geo: FileAttachment("./data/dim_geo.parquet")
+}));
+```
 
 # Revenus, emploi et dépendance à la voiture
 
@@ -77,7 +83,7 @@ Plot.plot({
       tip: true,
       title: (d) => `${d.libgeo} (${d.departement})\n${libX.split(" (")[0]} : ${axeX === "mediane" ? fmtEur(d.mediane) : fmtPct(d.taux_pauvrete)}\n${libY.split(" (")[0]} : ${fmtPct(d[axeY])}\n${fmtInt(d.nb_actifs)} actifs · ${d.nb_gares ?? 0} pôle(s) ferré(s)`
     }),
-    Plot.linearRegressionY(rows, {x: axeX, y: axeY, stroke: "#111", strokeDasharray: "4 3", ci: 0})
+    Plot.linearRegressionY(rows, {x: axeX, y: axeY, stroke: "#25303b", strokeDasharray: "4 3", ci: 0})
   ]
 })
 ```
@@ -117,7 +123,7 @@ Plot.plot({
   marks: [
     Plot.dot(epci, {x: "taux_pauvrete", y: "part_voiture", r: "nb_actifs", fill: (d) => couleursDep.get(d.departement), fillOpacity: 0.6, stroke: "white", tip: true,
       title: (d) => `${d.libgeo}\npauvreté ${fmtPct(d.taux_pauvrete)} · voiture ${fmtPct(d.part_voiture)}\n${fmtInt(d.nb_actifs)} actifs · ${d.nb_gares ?? 0} pôles ferrés`}),
-    Plot.text(epci.toArray().filter((d) => d.nb_actifs > 150000 || d.taux_pauvrete > 25), {x: "taux_pauvrete", y: "part_voiture", text: (d) => d.libgeo.replace(/^(CA|CC|CU|EPT) /, ""), dy: -12, fontSize: 10, fill: "#333"})
+    Plot.text(epci.toArray().filter((d) => d.nb_actifs > 150000 || d.taux_pauvrete > 25), {x: "taux_pauvrete", y: "part_voiture", text: (d) => d.libgeo.replace(/^(CA|CC|CU|EPT) /, ""), dy: -12, fontSize: 10, fill: "#4e5864"})
   ]
 })
 ```
@@ -156,7 +162,7 @@ Plot.plot({
   marginLeft: 170,
   x: {label: `Taux de chômage (%, ${chomage.get(0)?.periode ?? ""})`},
   y: {label: null},
-  color: {type: "linear", scheme: "reds", domain: [0, d3.max(chomage, (d) => d.taux_chomage)]},
+  color: {type: "linear", scheme: "blues", domain: [0, d3.max(chomage, (d) => d.taux_chomage)]},
   marks: [
     Plot.barX(chomage, {x: "taux_chomage", y: "libgeo", sort: {y: "x", reverse: true}, fill: "taux_chomage", tip: true,
       title: (d) => `${d.libgeo}\nchômage ${fmtPct(d.taux_chomage)} · TC ${fmtPct(d.part_tc)}\n${fmtInt(d.nb_actifs)} actifs`}),

@@ -1,12 +1,18 @@
 ---
 title: Offre ferrée
-sql:
-  dim_gares: ./data/dim_gares.parquet
-  dim_geo: ./data/dim_geo.parquet
-  fact_mobilite: ./data/fact_mobilite.parquet
-  fact_validations: ./data/fact_validations.parquet
-  fact_validations_jour: ./data/fact_validations_jour.parquet
 ---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  dim_gares: FileAttachment("./data/dim_gares.parquet"),
+  dim_geo: FileAttachment("./data/dim_geo.parquet"),
+  fact_mobilite: FileAttachment("./data/fact_mobilite.parquet"),
+  fact_validations: FileAttachment("./data/fact_validations.parquet"),
+  fact_validations_jour: FileAttachment("./data/fact_validations_jour.parquet")
+}));
+```
 
 # Le réseau ferré : où sont les gares, qui les utilise ?
 
@@ -91,10 +97,10 @@ Plot.plot({
   r: {range: [1, 18], label: "Validations 12 mois"},
   marks: [
     Plot.geo(fc, {fill: (f) => partTc.get(f.properties.codegeo) ?? null, stroke: "white", strokeWidth: 0.2}),
-    Plot.geo(fcDep, {stroke: "#333", strokeWidth: 0.8, fill: "none"}),
-    Plot.dot(garesRows, {x: "lon", y: "lat", r: (d) => d.nb_validations_12m ?? 0, fill: "#b91c1c", fillOpacity: 0.45, stroke: "#7f1d1d", strokeWidth: 0.4, tip: true,
+    Plot.geo(fcDep, {stroke: "#4e5864", strokeWidth: 0.8, fill: "none"}),
+    Plot.dot(garesRows, {x: "lon", y: "lat", r: (d) => d.nb_validations_12m ?? 0, fill: "#c52625", fillOpacity: 0.45, stroke: "#25303b", strokeWidth: 0.4, tip: true,
       title: (d) => `${d.nom_pole} (${d.commune ?? "hors IDF"})\n${d.modes} · ${d.nb_lignes} ligne(s)\n${d.nb_validations_12m ? fmtInt(d.nb_validations_12m) + " validations / 12 mois" : "validations non publiées"}`}),
-    Plot.dot(garesRows.filter((d) => !d.nb_validations_12m), {x: "lon", y: "lat", r: 1.2, fill: "#7f1d1d"})
+    Plot.dot(garesRows.filter((d) => !d.nb_validations_12m), {x: "lon", y: "lat", r: 1.2, fill: "#25303b"})
   ]
 })
 ```
@@ -140,8 +146,8 @@ Plot.plot({
   x: {label: null},
   y: {label: "Validations / jour", tickFormat: fmtCompact, grid: true},
   marks: [
-    Plot.areaY(jours, {x: "jour", y: "nb_validations", fill: "#1d4ed8", fillOpacity: 0.12}),
-    Plot.lineY(jours, {x: "jour", y: "nb_validations", stroke: "#1d4ed8", strokeWidth: 1.2, tip: true,
+    Plot.areaY(jours, {x: "jour", y: "nb_validations", fill: "#0268d5", fillOpacity: 0.12}),
+    Plot.lineY(jours, {x: "jour", y: "nb_validations", stroke: "#0268d5", strokeWidth: 1.2, tip: true,
       title: (d) => `${d3.timeFormat("%a %d %b %Y")(d.jour)}\n${fmtInt(d.nb_validations)} validations`}),
     Plot.ruleY([0])
   ]

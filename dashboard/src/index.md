@@ -1,10 +1,16 @@
 ---
 title: Vue d'ensemble
-sql:
-  fact_mobilite: ./data/fact_mobilite.parquet
-  dim_geo: ./data/dim_geo.parquet
-  dim_indicateurs: ./data/dim_indicateurs.parquet
 ---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  fact_mobilite: FileAttachment("./data/fact_mobilite.parquet"),
+  dim_geo: FileAttachment("./data/dim_geo.parquet"),
+  dim_indicateurs: FileAttachment("./data/dim_indicateurs.parquet")
+}));
+```
 
 # Comment les Franciliens vont-ils travailler ?
 
@@ -117,7 +123,7 @@ Plot.plot({
           (v && v.effectif_base != null ? `\nbase: ${fmtInt(v.effectif_base)} actifs${v.fiable ? "" : " (peu fiable)"}` : "");
       }
     }),
-    Plot.geo(fcDep, {stroke: "#333", strokeWidth: 0.8, fill: "none"})
+    Plot.geo(fcDep, {stroke: "#4e5864", strokeWidth: 0.8, fill: "none"})
   ]
 })
 ```

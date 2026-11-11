@@ -1,10 +1,16 @@
 ---
 title: Flux domicile-travail
-sql:
-  fact_flux: ./data/fact_flux.parquet
-  dim_geo: ./data/dim_geo.parquet
-  modes_transport: ./data/modes_transport.parquet
 ---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  fact_flux: FileAttachment("./data/fact_flux.parquet"),
+  dim_geo: FileAttachment("./data/dim_geo.parquet"),
+  modes_transport: FileAttachment("./data/modes_transport.parquet")
+}));
+```
 
 # D'où viennent les actifs qui travaillent ici ?
 
@@ -139,7 +145,7 @@ Plot.plot({
   color: {type: "log", scheme: "blues", legend: true, label: `Actifs ${sens === "entrant" ? "venant travailler dans" : "résidant dans"} ${terr?.libgeo ?? ""}`, tickFormat: fmtCompact},
   marks: [
     Plot.geo(fc, {
-      fill: (f) => cibleSet.has(f.properties.codegeo) ? "#fbbf24" : (parCommune.get(f.properties.codegeo)?.nb_actifs ?? null),
+      fill: (f) => cibleSet.has(f.properties.codegeo) ? "#25303b" : (parCommune.get(f.properties.codegeo)?.nb_actifs ?? null),
       stroke: "white", strokeWidth: 0.25,
       tip: true,
       title: (f) => {
@@ -148,21 +154,21 @@ Plot.plot({
         return v ? `${f.properties.libgeo}\n${fmtInt(v.nb_actifs)} actifs\nTC ${fmtPct(v.part_tc)} · voiture ${fmtPct(v.part_voiture)}` : f.properties.libgeo;
       }
     }),
-    Plot.geo(fcDep, {stroke: "#333", strokeWidth: 0.8, fill: "none"}),
+    Plot.geo(fcDep, {stroke: "#4e5864", strokeWidth: 0.8, fill: "none"}),
     Plot.arrow(top, {
       x1: (d) => sens === "entrant" ? d.lon : terr.lon,
       y1: (d) => sens === "entrant" ? d.lat : terr.lat,
       x2: (d) => sens === "entrant" ? terr.lon : d.lon,
       y2: (d) => sens === "entrant" ? terr.lat : d.lat,
       strokeWidth: (d) => Math.max(0.6, Math.sqrt(d.nb_actifs) / 12),
-      stroke: "#b91c1c", strokeOpacity: 0.6, bend: 15, headLength: 6
+      stroke: "#c52625", strokeOpacity: 0.6, bend: 15, headLength: 6
     }),
-    Plot.dot([terr], {x: "lon", y: "lat", r: 5, fill: "#b91c1c", stroke: "white"})
+    Plot.dot([terr], {x: "lon", y: "lat", r: 5, fill: "#c52625", stroke: "white"})
   ]
 })
 ```
 
-<div class="note">Jaune : territoire choisi. Les flèches représentent les 40 flux les plus importants ; l'épaisseur est proportionnelle à la racine du nombre d'actifs. Seuls les flux de plus de quelques dizaines d'actifs sont statistiquement solides (fichier détail au 1/5).</div>
+<div class="note">En noir : territoire choisi. Les flèches représentent les 40 flux les plus importants ; l'épaisseur est proportionnelle à la racine du nombre d'actifs. Seuls les flux de plus de quelques dizaines d'actifs sont statistiquement solides (fichier détail au 1/5).</div>
 
 </div>
 
@@ -179,7 +185,7 @@ Plot.plot({
   x: {label: "Actifs", tickFormat: fmtCompact},
   y: {label: null},
   marks: [
-    Plot.barX(modes, {x: "nb_actifs", y: "mode", sort: {y: "x", reverse: true}, fill: (d) => couleursModes.get(d.mode) ?? "#94a3b8", tip: true,
+    Plot.barX(modes, {x: "nb_actifs", y: "mode", sort: {y: "x", reverse: true}, fill: (d) => couleursModes.get(d.mode) ?? "#a9b4c2", tip: true,
       title: (d) => `${d.mode} : ${fmtInt(d.nb_actifs)} (${fmtPct(100 * d.nb_actifs / d3.sum(modes, (m) => m.nb_actifs))})`}),
     Plot.ruleX([0])
   ]
