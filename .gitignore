@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# dbt
+target/
+dbt_packages/
+logs/
+.user.yml
+package-lock.yml
+
+# Données (re-générées par scripts/ingest.py et dbt)
+data/raw/
+data/parquet/
+data/*.duckdb
+data/*.duckdb.wal
+
+# Dashboard
+dashboard/node_modules/
+dashboard/dist/
+dashboard/src/.observablehq/cache/
+
+# Divers
+.DS_Store
+Thumbs.db
+.env
