@@ -82,6 +82,14 @@ jobs:
           npm run build
           mkdir -p dist/dbt && cp target/static_index.html dist/dbt/index.html 2>/dev/null || cp ../target/static_index.html dist/dbt/index.html
 
+      # Les navigateurs gardent les pages en cache 10 min : on garde aussi les fichiers de la version
+      # en ligne, sinon une page en cache demande des fichiers de données supprimés (404).
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Conserver les fichiers de la version précédente
+        run: python scripts/conserver_version_precedente.py dashboard/dist "${{ steps.pages.outputs.base_url }}"
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dashboard/dist

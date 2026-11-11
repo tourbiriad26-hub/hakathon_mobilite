@@ -45,6 +45,10 @@ REGION = "11"
 # Trimestres glissants publiés par IDFM (les 4 jeux couvrent les 12 derniers mois).
 IDFM_TRIMESTRES = ["1er", "2eme", "3eme", "4eme"]
 
+# Millésime de l'enquête BMO (France Travail). L'URL, l'onglet et les colonnes de bassin (BE26, NOMBE26)
+# en dépendent : à changer ici seulement lors de la publication d'un nouveau millésime.
+BMO_ANNEE = 2026
+
 
 # --------------------------------------------------------------------------
 # Outils
@@ -314,18 +318,20 @@ def ingest_bassins_emploi(force: bool) -> None:
 
 
 def ingest_bmo(force: bool) -> None:
-    """France Travail - enquête Besoins en Main-d'Œuvre 2026, projets de recrutement par bassin et métier."""
-    url = "https://www.francetravail.org/files/live/sites/peorg/files/documents/Statistiques-et-analyses/Open-data/BMO/Base-open-data-BMO-2026.xlsx"
-    x = download(url, RAW / "bmo_2026.xlsx", force)
-    df = pd.read_excel(x, sheet_name="BMO_2026_open_data", dtype=str, engine="calamine")
+    """France Travail - enquête Besoins en Main-d'Œuvre, projets de recrutement par bassin et métier."""
+    a, aa = BMO_ANNEE, str(BMO_ANNEE)[-2:]
+    url = f"https://www.francetravail.org/files/live/sites/peorg/files/documents/Statistiques-et-analyses/Open-data/BMO/Base-open-data-BMO-{a}.xlsx"
+    x = download(url, RAW / f"bmo_{a}.xlsx", force)
+    df = pd.read_excel(x, sheet_name=f"BMO_{a}_open_data", dtype=str, engine="calamine")
     df = df[df["REG"] == REGION].rename(columns={
         "Code métier BMO": "code_metier", "Nom métier BMO": "metier", "Famille_met": "code_famille",
         "Lbl_fam_met": "famille", "REG": "region", "NOM_REG": "nom_region", "Dept": "departement",
-        "NomDept": "nom_departement", "BE26": "code_be_bmo", "NOMBE26": "nom_bassin",
+        "NomDept": "nom_departement", f"BE{aa}": "code_be_bmo", f"NOMBE{aa}": "nom_bassin",
         "met": "nb_projets", "xmet": "nb_projets_difficiles", "smet": "nb_projets_saisonniers",
     })
     for c in ("nb_projets", "nb_projets_difficiles", "nb_projets_saisonniers"):
         df[c] = pd.to_numeric(df[c], errors="coerce")  # '*' = secret statistique -> NULL
+    # Nom de sortie stable : models/staging/_sources.yml lit bmo_2026 (renommer les deux ensemble).
     write_parquet(df, "bmo_2026")
 
 
@@ -399,9 +405,19 @@ def main() -> int:
     parser.add_argument("--only", choices=STEPS, action="append", help="source(s) à traiter")
     parser.add_argument("--force", action="store_true", help="re-télécharger même si le fichier est en cache")
     args = parser.parse_args()
+    # Une source en panne n'empêche pas les suivantes : le Parquet versionné de data/parquet/ reste en place
+    # pour elle, et le code de sortie non nul signale l'ingestion incomplète (avertissement en CI).
+    echecs = []
     for name in args.only or STEPS:
         log(f"=== {name}")
-        STEPS[name](args.force)
+        try:
+            STEPS[name](args.force)
+        except Exception as exc:  # noqa: BLE001 - on veut continuer sur toute erreur
+            log(f"ÉCHEC  {name} : {exc}")
+            echecs.append(name)
+    if echecs:
+        log(f"terminé avec {len(echecs)} source(s) en échec : {', '.join(echecs)}")
+        return 1
     log("terminé")
     return 0
 

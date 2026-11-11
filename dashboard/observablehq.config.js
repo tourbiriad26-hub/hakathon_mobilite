@@ -15,7 +15,9 @@ export default {
   toc: false,
   sidebar: true,
   search: false,
-  footer: ({path}) =>
-    `Données ouvertes INSEE, Île-de-France Mobilités, Etalab · pipeline dbt + DuckDB · <a href="https://github.com/tourbiriad26-hub/hakathon_mobilite">code source</a>`,
+  header: `<div class="entete"><span class="pastille">Hackathon Mobilité Paris 2026</span><span>Défi 2 · mobilités et emploi</span><a href="https://github.com/tourbiriad26-hub/hakathon_mobilite" target="_blank" rel="noopener">Code source ↗</a></div>`,
+  footer: () =>
+    `Données ouvertes : INSEE · Île-de-France Mobilités · Région Île-de-France · France Travail · DARES · Etalab / IGN — Licence Ouverte 2.0 et ODbL.<br>` +
+    `Pipeline open source : Python, dbt, DuckDB, Observable Framework · mis à jour chaque lundi · <a href="https://github.com/tourbiriad26-hub/hakathon_mobilite">code source</a>`,
   style: "style.css"
 };

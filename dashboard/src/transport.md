@@ -15,6 +15,11 @@ sur les quatre derniers trimestres publiés, croisés avec les parts modales des
 
 ```js
 import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy, couleursDep, nomsDep} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["Île-de-France Mobilités", "INSEE", "Etalab", "IGN"]))
 ```
 
 ```sql id=kpi
@@ -41,10 +46,10 @@ const K = kpi.get(0); const S = sansGare.get(0);
 ```
 
 <div class="grid grid-cols-4">
-  <div class="card"><h2>Pôles ferrés</h2><div class="big">${fmtInt(K.nb_poles)}</div><div class="muted">zones de correspondance en Île-de-France</div></div>
-  <div class="card"><h2>Validations</h2><div class="big">${fmtCompact(K.validations)}</div><div class="muted">${K.debut} → ${K.fin}</div></div>
-  <div class="card"><h2>Communes sans gare</h2><div class="big">${fmtInt(S.sans_gare)} / ${fmtInt(S.communes)}</div><div class="muted">${fmtPct(100 * S.actifs_sans_gare / S.actifs)} des actifs y résident</div></div>
-  <div class="card"><h2>Communes desservies</h2><div class="big">${fmtInt(K.communes_desservies)}</div><div class="muted">au moins un pôle ferré</div></div>
+  <div class="card kpi kpi--tc"><h2>Pôles ferrés</h2><div class="big">${fmtInt(K.nb_poles)}</div><div class="muted">zones de correspondance en Île-de-France</div></div>
+  <div class="card kpi kpi--tc"><h2>Validations</h2><div class="big">${fmtCompact(K.validations)}</div><div class="muted">${K.debut} → ${K.fin}</div></div>
+  <div class="card kpi kpi--alerte"><h2>Communes sans gare</h2><div class="big">${fmtInt(S.sans_gare)} / ${fmtInt(S.communes)}</div><div class="muted">${fmtPct(100 * S.actifs_sans_gare / S.actifs)} des actifs y résident</div></div>
+  <div class="card kpi kpi--velo"><h2>Communes desservies</h2><div class="big">${fmtInt(K.communes_desservies)}</div><div class="muted">au moins un pôle ferré</div></div>
 </div>
 
 ```sql id=gares
@@ -82,7 +87,7 @@ Plot.plot({
   width,
   height: Math.min(680, width * 0.8),
   projection: {type: "mercator", domain: fcDep},
-  color: {type: "quantile", n: 6, scheme: "greens", legend: true, label: "Part modale TC des résidents (%)"},
+  color: {type: "quantile", n: 6, scheme: "blues", legend: true, label: "Part modale TC des résidents (%)"},
   r: {range: [1, 18], label: "Validations 12 mois"},
   marks: [
     Plot.geo(fc, {fill: (f) => partTc.get(f.properties.codegeo) ?? null, stroke: "white", strokeWidth: 0.2}),
@@ -94,7 +99,7 @@ Plot.plot({
 })
 ```
 
-<div class="note">Fond : part des actifs résidents allant travailler en transports en commun (vert foncé = forte). Cercles : pôles ferrés, surface proportionnelle aux validations. Les validations ne sont pas publiées pour tous les pôles (petits points) : les données IDFM couvrent le réseau ferré hors certains tramways et hors bus.</div>
+<div class="note">Fond : part des actifs résidents allant travailler en transports en commun (bleu foncé = forte, même couleur que les transports en commun sur les autres pages). Cercles : pôles ferrés, surface proportionnelle aux validations. Les validations ne sont pas publiées pour tous les pôles (petits points) : les données IDFM couvrent le réseau ferré hors certains tramways et hors bus.</div>
 
 </div>
 

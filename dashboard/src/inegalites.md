@@ -12,6 +12,11 @@ Une bulle = une commune ; sa taille = son nombre d'actifs. Seules les communes �
 
 ```js
 import {fmtInt, fmtPct, fmtEur, fmtCompact, couleursDep, nomsDep} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["INSEE", "Île-de-France Mobilités"]))
 ```
 
 ```sql id=communes
@@ -155,8 +160,9 @@ Plot.plot({
   marginLeft: 170,
   x: {label: `Taux de chômage (%, ${chomage.get(0)?.periode ?? ""})`},
   y: {label: null},
+  color: {type: "linear", scheme: "reds", domain: [0, d3.max(chomage, (d) => d.taux_chomage)]},
   marks: [
-    Plot.barX(chomage, {x: "taux_chomage", y: "libgeo", sort: {y: "x", reverse: true}, fill: (d) => d.taux_chomage >= 8 ? "#dc2626" : "#1d4ed8", tip: true,
+    Plot.barX(chomage, {x: "taux_chomage", y: "libgeo", sort: {y: "x", reverse: true}, fill: "taux_chomage", tip: true,
       title: (d) => `${d.libgeo}\nchômage ${fmtPct(d.taux_chomage)} · TC ${fmtPct(d.part_tc)}\n${fmtInt(d.nb_actifs)} actifs`}),
     Plot.text(chomage, {x: "taux_chomage", y: "libgeo", text: (d) => fmtPct(d.taux_chomage), dx: 4, textAnchor: "start", fontSize: 11}),
     Plot.ruleX([0])
