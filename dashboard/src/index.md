@@ -29,17 +29,17 @@ const R = indexBy(region, "code_indicateur", "nombre");
 ```
 
 <div class="grid grid-cols-4">
-  <div class="card"><h2>Actifs occupés</h2><div class="big">${fmtCompact(R.get("nb_actifs_occupes"))}</div><div class="muted">résidant en Île-de-France</div></div>
-  <div class="card"><h2>Transports en commun</h2><div class="big">${fmtPct(R.get("part_tc"))}</div><div class="muted">des trajets domicile-travail</div></div>
-  <div class="card"><h2>Voiture</h2><div class="big">${fmtPct(R.get("part_voiture"))}</div><div class="muted">camion ou fourgonnette</div></div>
-  <div class="card"><h2>Vélo</h2><div class="big">${fmtPct(R.get("part_velo"))}</div><div class="muted">y compris électrique</div></div>
+  <div class="card kpi"><h2>Actifs occupés</h2><div class="big">${fmtCompact(R.get("nb_actifs_occupes"))}</div><div class="muted">résidant en Île-de-France</div></div>
+  <div class="card kpi kpi--tc"><h2>Transports en commun</h2><div class="big">${fmtPct(R.get("part_tc"))}</div><div class="muted">des trajets domicile-travail</div></div>
+  <div class="card kpi kpi--voiture"><h2>Voiture</h2><div class="big">${fmtPct(R.get("part_voiture"))}</div><div class="muted">camion ou fourgonnette</div></div>
+  <div class="card kpi kpi--velo"><h2>Vélo</h2><div class="big">${fmtPct(R.get("part_velo"))}</div><div class="muted">y compris électrique</div></div>
 </div>
 
 <div class="grid grid-cols-4">
-  <div class="card"><h2>Travaillent hors de leur commune</h2><div class="big">${fmtPct(R.get("part_hors_commune"))}</div><div class="muted">${fmtPct(R.get("part_hors_departement"))} hors de leur département</div></div>
-  <div class="card"><h2>Ménages sans voiture</h2><div class="big">${fmtPct(R.get("part_menages_sans_voiture"))}</div><div class="muted">parmi les actifs occupés</div></div>
-  <div class="card"><h2>Niveau de vie médian</h2><div class="big">${fmtEur(R.get("mediane_niveau_vie"))}</div><div class="muted">par an et par unité de consommation (2021)</div></div>
-  <div class="card"><h2>Pôles ferrés</h2><div class="big">${fmtInt(R.get("nb_gares"))}</div><div class="muted">${fmtCompact(R.get("nb_validations_12m"))} validations sur 12 mois</div></div>
+  <div class="card kpi kpi--marche"><h2>Travaillent hors de leur commune</h2><div class="big">${fmtPct(R.get("part_hors_commune"))}</div><div class="muted">${fmtPct(R.get("part_hors_departement"))} hors de leur département</div></div>
+  <div class="card kpi kpi--neutre"><h2>Ménages sans voiture</h2><div class="big">${fmtPct(R.get("part_menages_sans_voiture"))}</div><div class="muted">parmi les actifs occupés</div></div>
+  <div class="card kpi kpi--velo"><h2>Niveau de vie médian</h2><div class="big">${fmtEur(R.get("mediane_niveau_vie"))}</div><div class="muted">par an et par unité de consommation (2021)</div></div>
+  <div class="card kpi kpi--tc"><h2>Pôles ferrés</h2><div class="big">${fmtInt(R.get("nb_gares"))}</div><div class="muted">${fmtCompact(R.get("nb_validations_12m"))} validations sur 12 mois</div></div>
 </div>
 
 ## Carte : un indicateur, une échelle

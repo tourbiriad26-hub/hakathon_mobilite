@@ -107,9 +107,9 @@ const totalFlux = sens === "entrant" ? I.entrants : I.sortants;
 ```
 
 <div class="grid grid-cols-3">
-  <div class="card"><h2>Travaillent et résident dans le territoire</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">actifs « internes »</div></div>
-  <div class="card"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">résident ailleurs, travaillent ici</div></div>
-  <div class="card"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">résident ici, travaillent ailleurs</div></div>
+  <div class="card kpi kpi--neutre"><h2>Travaillent et résident dans le territoire</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">actifs « internes »</div></div>
+  <div class="card kpi kpi--tc"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">résident ailleurs, travaillent ici</div></div>
+  <div class="card kpi kpi--voiture"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">résident ici, travaillent ailleurs</div></div>
 </div>
 
 ```sql id=communes

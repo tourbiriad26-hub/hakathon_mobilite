@@ -35,10 +35,10 @@ const D = demandeurs.get(0);
 ```
 
 <div class="grid grid-cols-4">
-  <div class="card"><h2>Projets de recrutement 2026</h2><div class="big">${fmtCompact(R.get("nb_projets_recrutement")?.nombre)}</div><div class="muted">intentions d'embauche déclarées (BMO)</div></div>
-  <div class="card"><h2>Jugés difficiles</h2><div class="big">${fmtPct(R.get("part_recrutements_difficiles")?.nombre)}</div><div class="muted">des projets de recrutement</div></div>
-  <div class="card"><h2>Demandeurs d'emploi (cat. A)</h2><div class="big">${fmtCompact(D.total)}</div><div class="muted">fin ${D.periode}, zones d'emploi franciliennes</div></div>
-  <div class="card"><h2>Offre de transport</h2><div class="big">${fmtInt(R.get("nb_lignes_bus")?.nombre)} bus</div><div class="muted">${fmtInt(R.get("nb_lignes_train")?.nombre)} train/RER · ${fmtInt(R.get("nb_lignes_metro")?.nombre)} métro · ${fmtInt(R.get("nb_lignes_tram")?.nombre)} tram (lignes actives)</div></div>
+  <div class="card kpi"><h2>Projets de recrutement 2026</h2><div class="big">${fmtCompact(R.get("nb_projets_recrutement")?.nombre)}</div><div class="muted">intentions d'embauche déclarées (BMO)</div></div>
+  <div class="card kpi kpi--alerte"><h2>Jugés difficiles</h2><div class="big">${fmtPct(R.get("part_recrutements_difficiles")?.nombre)}</div><div class="muted">des projets de recrutement</div></div>
+  <div class="card kpi kpi--voiture"><h2>Demandeurs d'emploi (cat. A)</h2><div class="big">${fmtCompact(D.total)}</div><div class="muted">fin ${D.periode}, zones d'emploi franciliennes</div></div>
+  <div class="card kpi kpi--tc"><h2>Offre de transport</h2><div class="big">${fmtInt(R.get("nb_lignes_bus")?.nombre)} bus</div><div class="muted">${fmtInt(R.get("nb_lignes_train")?.nombre)} train/RER · ${fmtInt(R.get("nb_lignes_metro")?.nombre)} métro · ${fmtInt(R.get("nb_lignes_tram")?.nombre)} tram (lignes actives)</div></div>
 </div>
 
 ## Les bassins d'emploi

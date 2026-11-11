@@ -46,10 +46,10 @@ const K = kpi.get(0); const S = sansGare.get(0);
 ```
 
 <div class="grid grid-cols-4">
-  <div class="card"><h2>Pôles ferrés</h2><div class="big">${fmtInt(K.nb_poles)}</div><div class="muted">zones de correspondance en Île-de-France</div></div>
-  <div class="card"><h2>Validations</h2><div class="big">${fmtCompact(K.validations)}</div><div class="muted">${K.debut} → ${K.fin}</div></div>
-  <div class="card"><h2>Communes sans gare</h2><div class="big">${fmtInt(S.sans_gare)} / ${fmtInt(S.communes)}</div><div class="muted">${fmtPct(100 * S.actifs_sans_gare / S.actifs)} des actifs y résident</div></div>
-  <div class="card"><h2>Communes desservies</h2><div class="big">${fmtInt(K.communes_desservies)}</div><div class="muted">au moins un pôle ferré</div></div>
+  <div class="card kpi kpi--tc"><h2>Pôles ferrés</h2><div class="big">${fmtInt(K.nb_poles)}</div><div class="muted">zones de correspondance en Île-de-France</div></div>
+  <div class="card kpi kpi--tc"><h2>Validations</h2><div class="big">${fmtCompact(K.validations)}</div><div class="muted">${K.debut} → ${K.fin}</div></div>
+  <div class="card kpi kpi--alerte"><h2>Communes sans gare</h2><div class="big">${fmtInt(S.sans_gare)} / ${fmtInt(S.communes)}</div><div class="muted">${fmtPct(100 * S.actifs_sans_gare / S.actifs)} des actifs y résident</div></div>
+  <div class="card kpi kpi--velo"><h2>Communes desservies</h2><div class="big">${fmtInt(K.communes_desservies)}</div><div class="muted">au moins un pôle ferré</div></div>
 </div>
 
 ```sql id=gares
