@@ -140,15 +140,17 @@ Plot.plot({
   x: {label: null},
   y: {label: "Validations / jour", tickFormat: fmtCompact, grid: true},
   marks: [
-    Plot.areaY(jours, {x: "jour", y: "nb_validations", fill: "#1d4ed8", fillOpacity: 0.12}),
-    Plot.lineY(jours, {x: "jour", y: "nb_validations", stroke: "#1d4ed8", strokeWidth: 1.2, tip: true,
+    Plot.lineY(jours, {x: "jour", y: "nb_validations", stroke: "#93c5fd", strokeWidth: 0.8}),
+    // tendance : moyenne glissante sur 7 jours (efface l'effet semaine / week-end)
+    Plot.lineY(jours, Plot.windowY({k: 7, anchor: "middle"}, {x: "jour", y: "nb_validations", stroke: "#1d4ed8", strokeWidth: 3})),
+    Plot.lineY(jours, {x: "jour", y: "nb_validations", strokeOpacity: 0, tip: true,
       title: (d) => `${d3.timeFormat("%a %d %b %Y")(d.jour)}\n${fmtInt(d.nb_validations)} validations`}),
     Plot.ruleY([0])
   ]
 })
 ```
 
-<div class="note">On lit la semaine (creux du week-end), les vacances scolaires et les jours fériés. Les grèves ou incidents majeurs apparaissent comme des creux isolés.</div>
+<div class="note">Trait épais : moyenne sur 7 jours, pour voir la tendance. Trait clair : chaque jour. On lit la semaine (creux du week-end), les vacances scolaires et les jours fériés. Les grèves ou incidents majeurs apparaissent comme des creux isolés.</div>
 
 </div>
 </div>
