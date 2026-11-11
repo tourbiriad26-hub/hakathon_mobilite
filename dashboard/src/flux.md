@@ -1,5 +1,5 @@
 ---
-title: Flux domicile-travail
+title: D'où viennent les travailleurs
 ---
 
 ```js
@@ -12,18 +12,23 @@ const sql = DuckDBClient.sql(tablesCompletes({
 }));
 ```
 
-# D'où viennent les actifs qui travaillent ici ?
-
-Choisissez un territoire d'emploi : la carte colore chaque commune de résidence selon le nombre
-d'actifs qui viennent y travailler, et les flèches relient les 40 principales origines.
-
 ```js
-import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy, couleursModes} from "./components/format.js";
-import {bandeauSources} from "./components/sources.js";
+import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy} from "./components/format.js";
+import {IDFM, carte, echelleCarte, barresClassees} from "./components/graphiques.js";
+import {recherche} from "./components/filtres.js";
+import {lexique} from "./components/lexique.js";
+import {piedSources} from "./components/sources.js";
 ```
 
+# D'où viennent les personnes qui travaillent ici ?
+
+Choisissez un territoire. La carte montre dans quelles communes habitent les personnes qui viennent y travailler,
+ou, dans l'autre sens, où vont travailler ses habitants. **Cliquez sur une commune de la carte** pour la choisir à son tour.
+
 ```js
-display(bandeauSources(["INSEE", "Etalab", "IGN"]))
+// Territoire étudié, sous la forme « type|code ». Il change avec la liste, la recherche ou un clic sur la carte.
+const choix = Mutable("EPCI|200054781");
+const choisir = (valeur) => { choix.value = valeur; };
 ```
 
 ```sql id=territoires
@@ -33,15 +38,39 @@ ORDER BY CASE maille WHEN 'Département' THEN 1 WHEN 'Bassin d''emploi' THEN 2 W
 ```
 
 ```js
-const terrRows = territoires.toArray();
-const terrOptions = new Map(terrRows.map((d) => [`${d.libgeo} (${d.maille})`, `${d.maille}|${d.codegeo}`]));
-const choix = view(Inputs.select(terrOptions, {label: "Territoire d'emploi", value: "EPCI|200054781", width: 420}));
-const sens = view(Inputs.radio(new Map([["Qui vient y travailler ?", "entrant"], ["Où vont travailler ses résidents ?", "sortant"]]), {label: "Sens", value: "entrant"}));
+const lignesTerritoires = territoires.toArray();
+const nomType = new Map([["Département", "département"], ["Bassin d'emploi", "bassin d'emploi"], ["EPCI", "intercommunalité"], ["Commune", "commune"]]);
+const libelleTerritoire = (d) => `${d.libgeo} (${nomType.get(d.maille)})`;
+// Liste courte (départements, bassins, intercommunalités) et recherche complète (communes comprises).
+const optionsListe = new Map([["— choisir dans la liste —", ""], ...lignesTerritoires.filter((d) => d.maille !== "Commune").map((d) => [libelleTerritoire(d), `${d.maille}|${d.codegeo}`])]);
+const optionsRecherche = new Map(lignesTerritoires.map((d) => [libelleTerritoire(d), `${d.maille}|${d.codegeo}`]));
+```
+
+<div class="filtres">
+
+```js
+const listeTerritoires = Inputs.select(optionsListe, {label: "Territoire", value: [...optionsListe.values()].includes(choix) ? choix : ""});
+listeTerritoires.addEventListener("input", () => { if (listeTerritoires.value) choisir(listeTerritoires.value); });
+display(listeTerritoires);
 ```
 
 ```js
+display(recherche(optionsRecherche, {
+  label: "Rechercher une commune ou un territoire",
+  placeholder: "Tapez un nom, par exemple Nanterre",
+  surChoix: choisir
+}));
+```
+
+```js
+const sens = view(Inputs.radio(new Map([["Qui vient y travailler ?", "entrant"], ["Où vont travailler ses habitants ?", "sortant"]]), {label: "Question", value: "entrant"}));
+```
+
+</div>
+
+```js
 const [mailleChoisie, codeChoisi] = choix.split("|");
-const terr = terrRows.find((d) => d.maille === mailleChoisie && d.codegeo === codeChoisi);
+const terr = lignesTerritoires.find((d) => d.maille === mailleChoisie && d.codegeo === codeChoisi);
 // Colonne de dim_geo (maille Commune) qui rattache une commune au territoire choisi
 const colonne = mailleChoisie === "EPCI" ? "epci" : mailleChoisie === "Département" ? "departement" : mailleChoisie === "Bassin d'emploi" ? "bassin_emploi" : "codegeo";
 ```
@@ -97,26 +126,14 @@ WITH cibles AS (
       OR (${mailleChoisie} = 'Bassin d''emploi' AND bassin_emploi = ${codeChoisi})
       OR (${mailleChoisie} = 'Commune' AND codegeo = ${codeChoisi}))
 )
-SELECT m.mode_court AS mode, m.ordre, SUM(f.nb_actifs) AS nb_actifs
+SELECT m.mode_court AS mode, SUM(f.nb_actifs) AS nb_actifs
 FROM fact_flux f
 JOIN modes_transport m ON m.code_trans = f.code_trans
 WHERE f.code_trans <> '1'
   AND ((${sens} = 'entrant' AND f.commune_travail IN (SELECT codegeo FROM cibles) AND f.commune_residence NOT IN (SELECT codegeo FROM cibles))
     OR (${sens} = 'sortant' AND f.commune_residence IN (SELECT codegeo FROM cibles) AND f.commune_travail NOT IN (SELECT codegeo FROM cibles)))
-GROUP BY m.mode_court, m.ordre
-ORDER BY m.ordre
+GROUP BY m.mode_court
 ```
-
-```js
-const I = interne.get(0);
-const totalFlux = sens === "entrant" ? I.entrants : I.sortants;
-```
-
-<div class="grid grid-cols-3">
-  <div class="card kpi kpi--neutre"><h2>Travaillent et résident dans le territoire</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">actifs « internes »</div></div>
-  <div class="card kpi kpi--tc"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">résident ailleurs, travaillent ici</div></div>
-  <div class="card kpi kpi--voiture"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">résident ici, travaillent ailleurs</div></div>
-</div>
 
 ```sql id=communes
 SELECT codegeo, libgeo, departement, epci, bassin_emploi, geojson FROM dim_geo WHERE maille = 'Commune'
@@ -127,83 +144,104 @@ SELECT codegeo, libgeo, geojson FROM dim_geo WHERE maille = 'Département'
 ```
 
 ```js
+const I = interne.get(0);
+const totalFlux = sens === "entrant" ? I.entrants : I.sortants;
 const fc = toFeatureCollection(communes);
 const fcDep = toFeatureCollection(departements);
-const fluxRows = flux.toArray().filter((d) => d.lon != null);
-const parCommune = indexBy(fluxRows, "commune");
-const top = fluxRows.slice(0, 40);
-const cibleSet = new Set(communes.toArray().filter((d) => d[colonne] === codeChoisi).map((d) => d.codegeo));
+const lignesFlux = flux.toArray().filter((d) => d.lon != null);
+const parCommune = indexBy(lignesFlux, "commune");
+const principaux = lignesFlux.slice(0, 10);
+const codesCibles = new Set(communes.toArray().filter((d) => d[colonne] === codeChoisi).map((d) => d.codegeo));
+const fcCibles = {type: "FeatureCollection", features: fc.features.filter((f) => codesCibles.has(f.properties.codegeo))};
+const lignesModes = modes.toArray();
+const totalModes = d3.sum(lignesModes, (d) => d.nb_actifs);
+const phrase = sens === "entrant" ? `Personnes venant travailler dans : ${terr?.libgeo ?? ""}` : `Lieu de travail des habitants de : ${terr?.libgeo ?? ""}`;
 ```
+
+<div class="grid grid-cols-3">
+  <div class="card kpi"><h2>Habitent et travaillent ici</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">personnes, dans ${terr?.libgeo ?? ""}</div></div>
+  <div class="card kpi kpi--tc"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">habitent ailleurs, travaillent ici</div></div>
+  <div class="card kpi"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">habitent ici, travaillent ailleurs</div></div>
+</div>
 
 <div class="card">
 
+## ${phrase}
+
 ```js
-Plot.plot({
-  width,
-  height: Math.min(680, width * 0.8),
-  projection: {type: "mercator", domain: fcDep},
-  color: {type: "log", scheme: "blues", legend: true, label: `Actifs ${sens === "entrant" ? "venant travailler dans" : "résidant dans"} ${terr?.libgeo ?? ""}`, tickFormat: fmtCompact},
-  marks: [
-    Plot.geo(fc, {
-      fill: (f) => cibleSet.has(f.properties.codegeo) ? "#25303b" : (parCommune.get(f.properties.codegeo)?.nb_actifs ?? null),
-      stroke: "white", strokeWidth: 0.25,
-      tip: true,
-      title: (f) => {
-        const v = parCommune.get(f.properties.codegeo);
-        if (cibleSet.has(f.properties.codegeo)) return `${f.properties.libgeo}\n(territoire choisi)`;
-        return v ? `${f.properties.libgeo}\n${fmtInt(v.nb_actifs)} actifs\nTC ${fmtPct(v.part_tc)} · voiture ${fmtPct(v.part_voiture)}` : f.properties.libgeo;
-      }
-    }),
-    Plot.geo(fcDep, {stroke: "#4e5864", strokeWidth: 0.8, fill: "none"}),
-    Plot.arrow(top, {
-      x1: (d) => sens === "entrant" ? d.lon : terr.lon,
-      y1: (d) => sens === "entrant" ? d.lat : terr.lat,
-      x2: (d) => sens === "entrant" ? terr.lon : d.lon,
-      y2: (d) => sens === "entrant" ? terr.lat : d.lat,
-      strokeWidth: (d) => Math.max(0.6, Math.sqrt(d.nb_actifs) / 12),
-      stroke: "#c52625", strokeOpacity: 0.6, bend: 15, headLength: 6
-    }),
-    Plot.dot([terr], {x: "lon", y: "lat", r: 5, fill: "#c52625", stroke: "white"})
-  ]
-})
+resize((width) => carte({
+  fc, fcDep, width,
+  valeur: (f) => (codesCibles.has(f.properties.codegeo) ? null : parCommune.get(f.properties.codegeo)?.nb_actifs ?? null),
+  couleur: echelleCarte(lignesFlux.map((d) => d.nb_actifs), {label: "Nombre de personnes par commune"}),
+  titre: (f) => {
+    if (codesCibles.has(f.properties.codegeo)) return `${f.properties.libgeo}\n(territoire choisi)`;
+    const v = parCommune.get(f.properties.codegeo);
+    return (v ? `${f.properties.libgeo}\n${fmtInt(v.nb_actifs)} personnes\ndont ${fmtPct(v.part_tc)} en transports en commun` : `${f.properties.libgeo}\nmoins de quelques personnes`) + "\nCliquez pour choisir cette commune";
+  },
+  marques: [
+    Plot.geo(fcCibles, {fill: IDFM.encre, stroke: IDFM.encre, strokeWidth: 0.3}),
+    Plot.arrow(principaux, {
+      x1: (d) => (sens === "entrant" ? d.lon : terr.lon),
+      y1: (d) => (sens === "entrant" ? d.lat : terr.lat),
+      x2: (d) => (sens === "entrant" ? terr.lon : d.lon),
+      y2: (d) => (sens === "entrant" ? terr.lat : d.lat),
+      stroke: IDFM.rouge, strokeWidth: 2, strokeOpacity: 0.8, bend: 15, headLength: 8
+    })
+  ],
+  surClic: (p) => choisir(`Commune|${p.codegeo}`)
+}))
 ```
 
-<div class="note">En noir : territoire choisi. Les flèches représentent les 40 flux les plus importants ; l'épaisseur est proportionnelle à la racine du nombre d'actifs. Seuls les flux de plus de quelques dizaines d'actifs sont statistiquement solides (fichier détail au 1/5).</div>
+<div class="note"><b>Comment lire cette carte.</b> Le territoire choisi est en noir. Plus une commune est bleu foncé, plus elle compte de personnes concernées. Les 10 flèches rouges relient les 10 communes les plus importantes au territoire. En gris : presque personne.</div>
 
 </div>
 
 <div class="grid grid-cols-2">
 <div class="card">
 
-## Mode de transport de ces ${fmtCompact(totalFlux)} actifs
+## Comment se déplacent ces ${fmtCompact(totalFlux)} personnes
 
 ```js
-Plot.plot({
-  width,
-  height: 240,
-  marginLeft: 150,
-  x: {label: "Actifs", tickFormat: fmtCompact},
-  y: {label: null},
-  marks: [
-    Plot.barX(modes, {x: "nb_actifs", y: "mode", sort: {y: "x", reverse: true}, fill: (d) => couleursModes.get(d.mode) ?? "#a9b4c2", tip: true,
-      title: (d) => `${d.mode} : ${fmtInt(d.nb_actifs)} (${fmtPct(100 * d.nb_actifs / d3.sum(modes, (m) => m.nb_actifs))})`}),
-    Plot.ruleX([0])
-  ]
-})
+resize((width) => barresClassees(lignesModes, {
+  valeur: "nb_actifs", nom: "mode", width,
+  etiquette: (d) => `${fmtPct(100 * d.nb_actifs / totalModes)}`,
+  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
+  max: 6, margeGauche: 170, margeDroite: 70
+}))
 ```
+
+<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes concernées, le nombre de celles qui utilisent chaque moyen de transport. Les transports en commun sont en bleu.</div>
 
 </div>
 <div class="card">
 
-## Principales communes ${sens === "entrant" ? "d'origine" : "de destination"}
+## Les 10 communes ${sens === "entrant" ? "d'où elles viennent" : "où elles vont"}
 
 ```js
-Inputs.table(fluxRows.slice(0, 25).map((d) => ({Commune: d.libgeo, Dép: d.departement, Actifs: d.nb_actifs, "TC %": d.part_tc, "Voiture %": d.part_voiture})), {
-  format: {Actifs: fmtInt, "TC %": fmtPct, "Voiture %": fmtPct},
-  select: false,
-  rows: 25
-})
+resize((width) => barresClassees(lignesFlux, {
+  valeur: "nb_actifs", nom: "libgeo", width,
+  etiquette: (d) => `${fmtInt(d.nb_actifs)}`,
+  max: 10, margeGauche: 170, margeDroite: 80,
+  surClic: (d) => choisir(`Commune|${d.commune}`)
+}))
 ```
+
+<div class="note"><b>Comment lire ce graphique.</b> Le nombre de personnes pour chacune des 10 communes les plus importantes. Cliquez sur une barre pour étudier cette commune à son tour.</div>
 
 </div>
 </div>
+
+## Lexique
+
+```js
+display(lexique(["Entrants", "Sortants", "Actif occupé", "Commune", "Intercommunalité (EPCI)", "Bassin d'emploi", "Part d'un mode de transport"]))
+```
+
+## Sources des données
+
+```js
+display(piedSources(["INSEE", "Etalab", "IGN"], [
+  "Recensement de la population 2022, fichier « mobilités professionnelles » (INSEE) : commune d'habitation, commune de travail et mode de transport. Ce fichier est un sondage au 1/5 : les petits nombres sont approximatifs.",
+  "Contours des communes (Etalab, IGN) : fonds de carte."
+]))
+```

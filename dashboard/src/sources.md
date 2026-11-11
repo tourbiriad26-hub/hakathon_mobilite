@@ -1,5 +1,5 @@
 ---
-title: Sources & méthode
+title: Sources et méthode
 ---
 
 ```js
@@ -40,17 +40,25 @@ Liste officielle du Hackathon, avec ce que le projet en fait :
 SELECT ordre, titre, producteur, defis, statut, usage, url, licence FROM catalogue_sources ORDER BY ordre
 ```
 
+<div class="filtres">
+
 ```js
 const statutChoisi = view(Inputs.checkbox(["intégré", "couvert", "disponible", "non retenu"], {label: "Statut", value: ["intégré", "couvert", "disponible", "non retenu"]}));
 ```
 
 ```js
-const cat = catalogue.toArray().filter((d) => statutChoisi.includes(d.statut));
-const badge = (s) => ({"intégré": "✅", "couvert": "🟦", "disponible": "🟨", "non retenu": "⬜"})[s] + " " + s;
+const texteCherche = view(Inputs.text({label: "Rechercher une source", placeholder: "Tapez un mot, par exemple gares", autocomplete: "off"}));
+```
+
+</div>
+
+```js
+const sansAccent = (t) => String(t ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+const cat = catalogue.toArray().filter((d) => statutChoisi.includes(d.statut) && sansAccent(`${d.titre} ${d.producteur} ${d.usage}`).includes(sansAccent(texteCherche)));
 ```
 
 ```js
-Inputs.table(cat.map((d) => ({Statut: badge(d.statut), Source: d.titre, Producteur: d.producteur, Défis: d.defis, "Usage dans le projet": d.usage, Licence: d.licence, Lien: d.url})), {
+Inputs.table(cat.map((d) => ({Statut: d.statut, Source: d.titre, Producteur: d.producteur, Défis: d.defis, "Usage dans le projet": d.usage, Licence: d.licence, Lien: d.url})), {
   select: false,
   rows: 40,
   width: {Statut: 90, Source: 260, Producteur: 150, Défis: 120, "Usage dans le projet": 380, Licence: 90, Lien: 160},
@@ -59,6 +67,15 @@ Inputs.table(cat.map((d) => ({Statut: badge(d.statut), Source: d.titre, Producte
 ```
 
 <div class="note">${cat.filter((d) => d.statut === "intégré").length} sources intégrées, ${cat.filter((d) => d.statut === "couvert").length} couvertes par le fichier détail MOBPRO, ${cat.filter((d) => d.statut === "disponible").length} pistes documentées.</div>
+
+## Lexique complet
+
+Tous les mots utilisés sur le site, expliqués simplement.
+
+```js
+import {lexique, tousLesTermes} from "./components/lexique.js";
+display(lexique(tousLesTermes));
+```
 
 ## Indicateurs publiés
 

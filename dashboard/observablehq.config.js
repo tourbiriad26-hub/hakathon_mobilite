@@ -1,23 +1,48 @@
 // Configuration Observable Framework — https://observablehq.com/framework/config
+
+// Menu principal : affiché en haut de chaque page (onglets) et dans la barre latérale.
+const MENU = [
+  {name: "Accueil", path: "/", court: "Accueil"},
+  {name: "Se déplacer", path: "/deplacements", court: "Se déplacer"},
+  {name: "Trouver un emploi", path: "/emploi", court: "Emploi"},
+  {name: "D'où viennent les travailleurs", path: "/flux", court: "Trajets"},
+  {name: "Revenus et transports", path: "/inegalites", court: "Revenus"},
+  {name: "Gares et stations", path: "/transport", court: "Gares"},
+  {name: "Sources et méthode", path: "/sources", court: "Sources"}
+];
+
+// Onglets du haut : l'onglet de la page affichée est mis en avant.
+function onglets({path}) {
+  const courant = path === "/index" ? "/" : path;
+  const liens = MENU.map(
+    (p) => `<a href=".${p.path === "/" ? "/" : p.path}"${p.path === courant ? ' class="actif" aria-current="page"' : ""}>${p.court}</a>`
+  ).join("");
+  return `<nav class="onglets" aria-label="Menu principal">${liens}</nav>`;
+}
+
 export default {
   title: "Mobilité Île-de-France",
   root: "src",
   output: "dist",
   pages: [
-    {name: "Vue d'ensemble", path: "/"},
-    {name: "Emploi & bassins", path: "/emploi"},
-    {name: "Flux domicile-travail", path: "/flux"},
-    {name: "Inégalités & mobilité", path: "/inegalites"},
-    {name: "Offre ferrée", path: "/transport"},
-    {name: "Sources & méthode", path: "/sources"}
+    {name: "Accueil", path: "/"},
+    {
+      name: "Explorer",
+      pages: MENU.slice(1, 6).map(({name, path}) => ({name, path}))
+    },
+    {
+      name: "Comprendre",
+      pages: [{name: "Sources et méthode", path: "/sources"}]
+    }
   ],
-  head: '<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚇</text></svg>">',
+  head: '<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230268d5%22/><text x=%2250%22 y=%2268%22 font-size=%2252%22 font-family=%22Arial%22 font-weight=%22700%22 text-anchor=%22middle%22 fill=%22white%22>M</text></svg>">',
   toc: false,
   sidebar: true,
-  search: false,
-  header: `<div class="entete"><span class="pastille">Hackathon Mobilité Paris 2026</span><span>Défi 2 · mobilités et emploi</span><a href="https://github.com/tourbiriad26-hub/hakathon_mobilite" target="_blank" rel="noopener">Code source ↗</a></div>`,
+  search: true,
+  pager: true,
+  header: onglets,
   footer: () =>
-    `Données ouvertes : INSEE · Île-de-France Mobilités · Région Île-de-France · France Travail · DARES · Etalab / IGN — Licence Ouverte 2.0 et ODbL.<br>` +
-    `Pipeline open source : Python, dbt, DuckDB, Observable Framework · mis à jour chaque lundi · <a href="https://github.com/tourbiriad26-hub/hakathon_mobilite">code source</a>`,
+    `Hackathon Mobilités 2026, défi 2 « mobilités et emploi ». Données ouvertes : INSEE · Île-de-France Mobilités · Région Île-de-France · France Travail · DARES · Etalab / IGN (Licence Ouverte 2.0 et ODbL).<br>` +
+    `Site mis à jour chaque lundi · <a href="https://github.com/tourbiriad26-hub/hakathon_mobilite">code source</a>`,
   style: "style.css"
 };

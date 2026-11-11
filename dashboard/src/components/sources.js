@@ -42,4 +42,14 @@ export function logosProducteur(texte, hauteur = 20) {
   return cles.length ? html`<span class="logos-cellule">${cles.map((c) => logo(c, hauteur))}</span>` : html`<span>${texte}</span>`;
 }
 
+// Bloc « Sources des données » à placer tout en bas d'une page :
+// la liste des jeux de données utilisés, les logos des producteurs, et un lien vers la page détaillée.
+export function piedSources(cles, jeux = []) {
+  return html`<div class="pied-sources">
+    <ul>${jeux.map((j) => html`<li>${j}</li>`)}</ul>
+    <div class="bandeau-sources">${cles.map((c) => logo(c, 28))}</div>
+    <p class="muted">Toutes ces données sont publiques et gratuites (Licence Ouverte 2.0 ou ODbL). Détail, liens et méthode : <a href="./sources">page « Sources & méthode »</a>.</p>
+  </div>`;
+}
+
 export const tousLesProducteurs = Object.keys(LOGOS);

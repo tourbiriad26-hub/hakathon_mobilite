@@ -1,5 +1,5 @@
 ---
-title: Vue d'ensemble
+title: Accueil
 ---
 
 ```js
@@ -7,211 +7,115 @@ title: Vue d'ensemble
 import {tablesCompletes} from "./components/duckdb.js";
 const sql = DuckDBClient.sql(tablesCompletes({
   fact_mobilite: FileAttachment("./data/fact_mobilite.parquet"),
-  dim_geo: FileAttachment("./data/dim_geo.parquet"),
-  dim_indicateurs: FileAttachment("./data/dim_indicateurs.parquet")
+  dim_geo: FileAttachment("./data/dim_geo.parquet")
 }));
 ```
 
-# Comment les Franciliens vont-ils travailler ?
-
-Recensement 2022 (INSEE, fichier détail MOBPRO), 5,7 millions d'actifs occupés, 1 266 communes.
-Chaque indicateur est recalculé à chaque échelle à partir des individus : rien n'est sommé à tort.
-
 ```js
-import {fmtInt, fmtPct, fmtEur, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, nomsDep, couleursModes, schemeIndicateur} from "./components/format.js";
-import {bandeauSources} from "./components/sources.js";
+import {fmtPct, fmtCompact, indexBy} from "./components/format.js";
+import {IDFM, barresClassees} from "./components/graphiques.js";
+import {recherche} from "./components/filtres.js";
+import {lexique} from "./components/lexique.js";
+import {piedSources} from "./components/sources.js";
 ```
 
-```js
-display(bandeauSources(["INSEE", "Île-de-France Mobilités", "Etalab", "IGN"]))
-```
+# Aller travailler en Île-de-France
+
+Comment les habitants d'Île-de-France se rendent-ils au travail ? Où sont les emplois, les gares, les difficultés ?
+Ce site répond avec des cartes et des graphiques simples, à partir de données publiques.
 
 ```sql id=region
 SELECT code_indicateur, nombre FROM fact_mobilite WHERE maille = 'Région'
 ```
 
+```sql id=listeCommunes
+SELECT codegeo, libgeo, departement FROM dim_geo WHERE maille = 'Commune' ORDER BY libgeo
+```
+
 ```js
 const R = indexBy(region, "code_indicateur", "nombre");
+const optionsCommunes = new Map(listeCommunes.toArray().map((d) => [`${d.libgeo} (${d.departement})`, d.codegeo]));
 ```
+
+<div class="accueil-recherche card">
+<h2>Commencez par votre commune</h2>
+
+```js
+display(recherche(optionsCommunes, {
+  label: "Votre commune",
+  placeholder: "Tapez un nom, par exemple Montreuil",
+  surChoix: (code) => { location.href = `./deplacements?commune=${code}`; }
+}));
+```
+
+<div class="muted">Choisissez un nom dans la liste : la fiche de la commune s'ouvre sur la carte.</div>
+</div>
+
+## Les chiffres à retenir
 
 <div class="grid grid-cols-4">
-  <div class="card kpi"><h2>Actifs occupés</h2><div class="big">${fmtCompact(R.get("nb_actifs_occupes"))}</div><div class="muted">résidant en Île-de-France</div></div>
-  <div class="card kpi kpi--tc"><h2>Transports en commun</h2><div class="big">${fmtPct(R.get("part_tc"))}</div><div class="muted">des trajets domicile-travail</div></div>
-  <div class="card kpi kpi--voiture"><h2>Voiture</h2><div class="big">${fmtPct(R.get("part_voiture"))}</div><div class="muted">camion ou fourgonnette</div></div>
-  <div class="card kpi kpi--velo"><h2>Vélo</h2><div class="big">${fmtPct(R.get("part_velo"))}</div><div class="muted">y compris électrique</div></div>
+  <div class="card kpi"><h2>Habitants ayant un emploi</h2><div class="big">${fmtCompact(R.get("nb_actifs_occupes"))}</div><div class="muted">en Île-de-France (recensement 2022)</div></div>
+  <div class="card kpi kpi--tc"><h2>Transports en commun</h2><div class="big">${fmtPct(R.get("part_tc"))}</div><div class="muted">des trajets vers le travail</div></div>
+  <div class="card kpi"><h2>Voiture</h2><div class="big">${fmtPct(R.get("part_voiture"))}</div><div class="muted">des trajets vers le travail</div></div>
+  <div class="card kpi"><h2>Travaillent hors de leur commune</h2><div class="big">${fmtPct(R.get("part_hors_commune"))}</div><div class="muted">des habitants ayant un emploi</div></div>
 </div>
 
-<div class="grid grid-cols-4">
-  <div class="card kpi kpi--marche"><h2>Travaillent hors de leur commune</h2><div class="big">${fmtPct(R.get("part_hors_commune"))}</div><div class="muted">${fmtPct(R.get("part_hors_departement"))} hors de leur département</div></div>
-  <div class="card kpi kpi--neutre"><h2>Ménages sans voiture</h2><div class="big">${fmtPct(R.get("part_menages_sans_voiture"))}</div><div class="muted">parmi les actifs occupés</div></div>
-  <div class="card kpi kpi--velo"><h2>Niveau de vie médian</h2><div class="big">${fmtEur(R.get("mediane_niveau_vie"))}</div><div class="muted">par an et par unité de consommation (2021)</div></div>
-  <div class="card kpi kpi--tc"><h2>Pôles ferrés</h2><div class="big">${fmtInt(R.get("nb_gares"))}</div><div class="muted">${fmtCompact(R.get("nb_validations_12m"))} validations sur 12 mois</div></div>
-</div>
-
-## Carte : un indicateur, une échelle
-
-```sql id=indicateurs
-SELECT code_indicateur, nom_indicateur, unite, type_mesure, description, famille_indicateur
-FROM dim_indicateurs
-WHERE code_indicateur NOT IN ('taux_chomage')
-ORDER BY ordre
-```
-
-```js
-const indicOptions = new Map(indicateurs.toArray().map((d) => [d.nom_indicateur, d.code_indicateur]));
-const indicateur = view(Inputs.select(indicOptions, {label: "Indicateur", value: "part_tc"}));
-const maille = view(Inputs.radio(["Commune", "Bassin d'emploi", "Département"], {label: "Échelle", value: "Commune"}));
-const masquerNonFiable = view(Inputs.toggle({label: "Masquer les valeurs peu fiables (< 200 actifs)", value: true}));
-```
-
-```js
-const indicInfo = indicateurs.toArray().find((d) => d.code_indicateur === indicateur);
-```
-
-```sql id=valeurs
-SELECT f.codegeo, f.nombre, f.fiable, f.effectif_base, g.libgeo, g.departement
-FROM fact_mobilite f
-JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = ${maille} AND f.code_indicateur = ${indicateur}
-```
-
-```sql id=geo
-SELECT codegeo, libgeo, departement, epci, geojson FROM dim_geo WHERE maille = ${maille}
-```
-
-```sql id=departements
-SELECT codegeo, libgeo, geojson FROM dim_geo WHERE maille = 'Département'
-```
-
-```js
-const fc = toFeatureCollection(geo);
-const fcDep = toFeatureCollection(departements);
-const vals = indexBy(valeurs, "codegeo");
-const valeur = (f) => {
-  const v = vals.get(f.properties.codegeo);
-  if (!v) return null;
-  if (masquerNonFiable && !v.fiable) return null;
-  return v.nombre;
-};
-const estMontant = indicInfo?.type_mesure === "effectif" || indicInfo?.type_mesure === "montant";
-```
+## Comment va-t-on travailler ?
 
 <div class="card">
 
 ```js
-Plot.plot({
-  width,
-  height: Math.min(640, width * 0.8),
-  projection: {type: "mercator", domain: fcDep},
-  color: {
-    type: estMontant && indicInfo?.type_mesure === "effectif" ? "log" : "quantile",
-    n: 7,
-    scheme: schemeIndicateur(indicInfo?.code_indicateur),
-    legend: true,
-    label: `${indicInfo?.nom_indicateur ?? ""} (${indicInfo?.unite ?? ""})`,
-    tickFormat: estMontant ? fmtCompact : undefined
-  },
-  marks: [
-    Plot.geo(fc, {
-      fill: valeur,
-      stroke: maille === "Commune" ? "white" : "none",
-      strokeWidth: 0.3,
-      tip: true,
-      title: (f) => {
-        const v = vals.get(f.properties.codegeo);
-        return `${f.properties.libgeo}\n${indicInfo?.nom_indicateur}: ${fmtIndicateur(v?.nombre, indicInfo?.unite)}` +
-          (v && v.effectif_base != null ? `\nbase: ${fmtInt(v.effectif_base)} actifs${v.fiable ? "" : " (peu fiable)"}` : "");
-      }
-    }),
-    Plot.geo(fcDep, {stroke: "#4e5864", strokeWidth: 0.8, fill: "none"})
-  ]
-})
-```
-
-<div class="note">${indicInfo?.description ?? ""} — Source : ${indicInfo?.famille_indicateur ?? ""}. Gris : donnée absente, secret statistique ou effectif trop faible.</div>
-
-</div>
-
-## Parts modales par département
-
-```sql id=parts
-SELECT g.libgeo AS departement, f.code_indicateur, f.nombre
-FROM fact_mobilite f
-JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = 'Département'
-  AND f.code_indicateur IN ('part_tc', 'part_voiture', 'part_velo', 'part_marche', 'part_2rm')
-ORDER BY g.codegeo
+const modesRegion = [
+  {mode: "Transports en commun", part: R.get("part_tc")},
+  {mode: "Voiture", part: R.get("part_voiture")},
+  {mode: "Marche à pied", part: R.get("part_marche")},
+  {mode: "Vélo", part: R.get("part_velo")},
+  {mode: "Deux-roues motorisé", part: R.get("part_2rm")}
+];
 ```
 
 ```js
-const libMode = new Map([["part_tc", "Transports en commun"], ["part_voiture", "Voiture"], ["part_velo", "Vélo"], ["part_marche", "Marche"], ["part_2rm", "Deux-roues motorisé"]]);
-// Départements classés de la plus forte à la plus faible part de transports en commun :
-// on lit d'un coup d'œil le passage de Paris à la petite puis à la grande couronne.
-const ordreDep = parts.toArray().filter((d) => d.code_indicateur === "part_tc").sort((a, b) => b.nombre - a.nombre).map((d) => d.departement);
+resize((width) => barresClassees(modesRegion, {
+  valeur: "part", nom: "mode", width,
+  etiquette: (d) => fmtPct(d.part),
+  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
+  margeGauche: 170, margeDroite: 70
+}))
 ```
 
-<div class="grid grid-cols-2">
-<div class="card">
+<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un moyen de transport. Plus la barre est longue, plus il est utilisé. Le chiffre au bout de la barre est le nombre de personnes sur 100 qui l'utilisent pour aller travailler. Les transports en commun sont en bleu.</div>
+
+</div>
+
+## Explorer le site
+
+<div class="grid grid-cols-3 tuiles">
+  <a class="card tuile" href="./deplacements"><h2>Se déplacer</h2><p>La carte de toutes les communes. Cliquez sur un territoire pour voir comment ses habitants vont travailler.</p><span>Ouvrir la carte →</span></a>
+  <a class="card tuile" href="./emploi"><h2>Trouver un emploi</h2><p>Où les employeurs veulent recruter en 2026, dans quels métiers, et où le chômage est le plus fort.</p><span>Voir l'emploi →</span></a>
+  <a class="card tuile" href="./flux"><h2>D'où viennent les travailleurs</h2><p>Choisissez un territoire : la carte montre d'où viennent les personnes qui y travaillent.</p><span>Voir les trajets →</span></a>
+  <a class="card tuile" href="./inegalites"><h2>Revenus et transports</h2><p>Les communes modestes et les communes aisées n'utilisent pas les mêmes transports.</p><span>Comparer →</span></a>
+  <a class="card tuile" href="./transport"><h2>Gares et stations</h2><p>Où sont les gares, lesquelles sont les plus fréquentées, quelles communes n'en ont pas.</p><span>Voir les gares →</span></a>
+  <a class="card tuile" href="./sources"><h2>Sources et méthode</h2><p>D'où viennent les chiffres et comment ils sont calculés. Tout est public et vérifiable.</p><span>Lire →</span></a>
+</div>
+
+## Comment utiliser le site
+
+<div class="grid grid-cols-3">
+  <div class="card etape"><div class="numero">1</div><h2>Choisissez</h2><p>Chaque page a une barre « Filtres » : un indicateur, un territoire, un zoom. Le champ de recherche trouve une commune ou une gare par son nom.</p></div>
+  <div class="card etape"><div class="numero">2</div><h2>Cliquez</h2><p>Les cartes et les barres sont cliquables. Un clic sur un territoire affiche sa fiche et met à jour les graphiques de la page.</p></div>
+  <div class="card etape"><div class="numero">3</div><h2>Lisez</h2><p>Sous chaque graphique, un encadré « Comment lire » explique ce qu'il montre. Le lexique en bas de page définit les mots utilisés.</p></div>
+</div>
+
+## Lexique
 
 ```js
-Plot.plot({
-  width,
-  height: 360,
-  marginLeft: 120,
-  x: {label: "Part des actifs se déplaçant (%)", domain: [0, 100]},
-  y: {label: null, domain: ordreDep},
-  color: {
-    domain: [...libMode.values()],
-    range: [...libMode.values()].map((m) => couleursModes.get(m)),
-    legend: true
-  },
-  marks: [
-    Plot.barX(parts, {
-      x: "nombre",
-      y: "departement",
-      fill: (d) => libMode.get(d.code_indicateur),
-      order: (d) => [...libMode.keys()].indexOf(d.code_indicateur),
-      tip: true,
-      title: (d) => `${d.departement}\n${libMode.get(d.code_indicateur)} : ${fmtPct(d.nombre)}`
-    }),
-    Plot.ruleX([0])
-  ]
-})
+display(lexique(["Actif occupé", "Trajet domicile-travail", "Part d'un mode de transport", "Transports en commun", "Commune"]))
 ```
 
-</div>
-<div class="card">
-
-```sql id=tableDep
-SELECT g.libgeo AS "Département",
-       MAX(CASE WHEN code_indicateur = 'nb_actifs_occupes' THEN nombre END) AS "Actifs",
-       MAX(CASE WHEN code_indicateur = 'part_tc' THEN nombre END) AS "TC %",
-       MAX(CASE WHEN code_indicateur = 'part_voiture' THEN nombre END) AS "Voiture %",
-       MAX(CASE WHEN code_indicateur = 'part_hors_departement' THEN nombre END) AS "Hors dép. %",
-       MAX(CASE WHEN code_indicateur = 'indice_concentration_emploi' THEN nombre END) AS "Emplois / 100 actifs",
-       MAX(CASE WHEN code_indicateur = 'part_menages_sans_voiture' THEN nombre END) AS "Sans voiture %"
-FROM fact_mobilite f
-JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = 'Département'
-GROUP BY g.libgeo, g.codegeo
-ORDER BY g.codegeo
-```
+## Sources des données
 
 ```js
-Inputs.table(tableDep, {
-  format: {
-    "Actifs": fmtInt,
-    "TC %": (v) => fmtPct(v),
-    "Voiture %": (v) => fmtPct(v),
-    "Hors dép. %": (v) => fmtPct(v),
-    "Emplois / 100 actifs": (v) => v?.toFixed(0),
-    "Sans voiture %": (v) => fmtPct(v)
-  },
-  select: false
-})
+display(piedSources(["INSEE"], [
+  "Recensement de la population 2022, fichier « mobilités professionnelles » (INSEE) : mode de transport et lieu de travail des habitants ayant un emploi."
+]))
 ```
-
-<div class="note">Un indice de concentration d'emploi supérieur à 100 signifie que le territoire accueille plus d'emplois que d'actifs résidents : il attire des navetteurs. Paris en accueille 178 pour 100 actifs résidents.</div>
-
-</div>
-</div>

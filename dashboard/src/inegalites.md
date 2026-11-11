@@ -1,5 +1,5 @@
 ---
-title: Inégalités & mobilité
+title: Revenus et transports
 ---
 
 ```js
@@ -11,142 +11,166 @@ const sql = DuckDBClient.sql(tablesCompletes({
 }));
 ```
 
-# Revenus, emploi et dépendance à la voiture
-
-Les parts modales (RP 2022) croisées avec les revenus (Filosofi 2021) et le chômage (dernier trimestre publié).
-Une bulle = une commune ; sa taille = son nombre d'actifs. Seules les communes à plus de 200 actifs sont tracées.
-
 ```js
-import {fmtInt, fmtPct, fmtEur, fmtCompact, couleursDep, nomsDep} from "./components/format.js";
-import {bandeauSources} from "./components/sources.js";
+import {fmtInt, fmtPct, fmtEur} from "./components/format.js";
+import {IDFM, barresClassees, barresModes} from "./components/graphiques.js";
+import {recherche} from "./components/filtres.js";
+import {lexique} from "./components/lexique.js";
+import {piedSources} from "./components/sources.js";
 ```
 
-```js
-display(bandeauSources(["INSEE", "Île-de-France Mobilités"]))
-```
+# Les communes modestes et les communes aisées se déplacent-elles pareil ?
 
-```sql id=communes
-SELECT g.codegeo, g.libgeo, g.departement, g.epci,
-       MAX(CASE WHEN code_indicateur = 'nb_actifs_occupes' THEN nombre END) AS nb_actifs,
-       MAX(CASE WHEN code_indicateur = 'part_tc' THEN nombre END) AS part_tc,
-       MAX(CASE WHEN code_indicateur = 'part_voiture' THEN nombre END) AS part_voiture,
-       MAX(CASE WHEN code_indicateur = 'part_velo' THEN nombre END) AS part_velo,
-       MAX(CASE WHEN code_indicateur = 'part_menages_sans_voiture' THEN nombre END) AS part_sans_voiture,
-       MAX(CASE WHEN code_indicateur = 'part_hors_departement' THEN nombre END) AS part_hors_departement,
-       MAX(CASE WHEN code_indicateur = 'mediane_niveau_vie' THEN nombre END) AS mediane,
-       MAX(CASE WHEN code_indicateur = 'taux_pauvrete' THEN nombre END) AS taux_pauvrete,
-       MAX(CASE WHEN code_indicateur = 'nb_gares' THEN nombre END) AS nb_gares,
-       BOOL_AND(fiable) AS fiable
-FROM fact_mobilite f
-JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = 'Commune'
-GROUP BY g.codegeo, g.libgeo, g.departement, g.epci
-HAVING MAX(CASE WHEN code_indicateur = 'nb_actifs_occupes' THEN nombre END) >= 200
-```
+On compare les revenus des habitants et leur façon d'aller travailler : transports en commun ou voiture.
 
-```js
-const axeY = view(Inputs.select(new Map([
-  ["Part modale voiture (%)", "part_voiture"],
-  ["Part modale transports en commun (%)", "part_tc"],
-  ["Part modale vélo (%)", "part_velo"],
-  ["Actifs dont le ménage n'a pas de voiture (%)", "part_sans_voiture"],
-  ["Part travaillant hors du département (%)", "part_hors_departement"]
-]), {label: "Axe vertical", value: "part_voiture"}));
-const axeX = view(Inputs.select(new Map([
-  ["Niveau de vie médian (€ / an)", "mediane"],
-  ["Taux de pauvreté (%)", "taux_pauvrete"]
-]), {label: "Axe horizontal", value: "mediane"}));
-const depsChoisis = view(Inputs.checkbox(nomsDep, {label: "Départements", value: [...nomsDep.values()], format: ([k, v]) => `${k} ${v}`}));
+## Cinq groupes de communes, de la plus modeste à la plus aisée
+
+```sql id=groupes
+WITH c AS (
+  SELECT g.codegeo,
+    MAX(CASE WHEN code_indicateur = 'nb_actifs_occupes' THEN nombre END) AS actifs,
+    MAX(CASE WHEN code_indicateur = 'part_tc' THEN nombre END) AS part_tc,
+    MAX(CASE WHEN code_indicateur = 'part_voiture' THEN nombre END) AS part_voiture,
+    MAX(CASE WHEN code_indicateur = 'mediane_niveau_vie' THEN nombre END) AS mediane
+  FROM fact_mobilite f
+  JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
+  WHERE f.maille = 'Commune'
+  GROUP BY g.codegeo
+),
+q AS (
+  SELECT *, NTILE(5) OVER (ORDER BY mediane) AS groupe
+  FROM c
+  WHERE mediane IS NOT NULL AND actifs >= 200 AND part_tc IS NOT NULL AND part_voiture IS NOT NULL
+)
+SELECT CAST(groupe AS INTEGER) AS groupe,
+       CAST(COUNT(*) AS INTEGER) AS nb_communes,
+       MIN(mediane) AS mediane_min,
+       MAX(mediane) AS mediane_max,
+       SUM(part_tc * actifs) / SUM(actifs) AS tc,
+       SUM(part_voiture * actifs) / SUM(actifs) AS voiture
+FROM q
+GROUP BY groupe
+ORDER BY groupe
 ```
 
 ```js
-const rows = communes.toArray().filter((d) => d[axeX] != null && d[axeY] != null && depsChoisis.includes(nomsDep.get(d.departement)));
-const libX = axeX === "mediane" ? "Niveau de vie médian (€ / an, 2021)" : "Taux de pauvreté (%, 2021)";
-const libY = {part_voiture: "Voiture (%)", part_tc: "Transports en commun (%)", part_velo: "Vélo (%)", part_sans_voiture: "Ménages sans voiture (%)", part_hors_departement: "Travaillent hors département (%)"}[axeY];
+const nomsGroupes = ["Les plus modestes", "Modestes", "Intermédiaires", "Aisées", "Les plus aisées"];
+const lignesGroupes = groupes.toArray().map((d) => ({
+  nom: nomsGroupes[d.groupe - 1],
+  tc: d.tc, voiture: d.voiture, nb_communes: d.nb_communes, mediane_min: d.mediane_min, mediane_max: d.mediane_max
+}));
 ```
 
-<div class="card">
+<div class="grid grid-cols-3">
+<div class="card grid-colspan-2">
 
 ```js
-Plot.plot({
-  width,
-  height: 520,
-  grid: true,
-  x: {label: libX, tickFormat: axeX === "mediane" ? fmtCompact : undefined},
-  y: {label: libY},
-  r: {range: [1.5, 22]},
-  color: {domain: [...nomsDep.values()], range: [...nomsDep.keys()].map((k) => couleursDep.get(k)), legend: true},
-  marks: [
-    Plot.dot(rows, {
-      x: axeX, y: axeY, r: "nb_actifs",
-      fill: (d) => nomsDep.get(d.departement), fillOpacity: 0.55, stroke: "white", strokeWidth: 0.4,
-      tip: true,
-      title: (d) => `${d.libgeo} (${d.departement})\n${libX.split(" (")[0]} : ${axeX === "mediane" ? fmtEur(d.mediane) : fmtPct(d.taux_pauvrete)}\n${libY.split(" (")[0]} : ${fmtPct(d[axeY])}\n${fmtInt(d.nb_actifs)} actifs · ${d.nb_gares ?? 0} pôle(s) ferré(s)`
-    }),
-    Plot.linearRegressionY(rows, {x: axeX, y: axeY, stroke: "#25303b", strokeDasharray: "4 3", ci: 0})
-  ]
-})
+resize((width) => barresModes(lignesGroupes, {width, margeGauche: 130}))
 ```
 
-<div class="note">La droite en pointillés est une régression linéaire simple sur les communes affichées. Elle décrit une association, pas une causalité : la desserte ferrée, la densité et la localisation des emplois jouent ensemble.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les communes sont rangées selon le niveau de vie de leurs habitants, puis coupées en 5 groupes de même taille. Chaque barre représente 100 habitants qui se déplacent pour aller travailler : en bleu ceux qui prennent les transports en commun, en foncé ceux qui prennent la voiture. Paris, très bien desservie, fait partie du groupe « Aisées » : c'est pourquoi ce groupe utilise peu la voiture.</div>
 
 </div>
+<div class="card">
 
-## Pauvreté et dépendance à la voiture, par EPCI
+## Les revenus de chaque groupe
+
+```js
+display(html`<table class="tableau-simple">
+  <thead><tr><th>Groupe</th><th>Niveau de vie médian par an</th></tr></thead>
+  <tbody>${lignesGroupes.map((d) => html`<tr><td>${d.nom}</td><td>${fmtEur(d.mediane_min)} à ${fmtEur(d.mediane_max)}</td></tr>`)}</tbody>
+</table>`);
+```
+
+<div class="muted">${lignesGroupes[0]?.nb_communes ?? ""} communes environ par groupe. Seules les communes de plus de 200 habitants ayant un emploi sont comptées.</div>
+
+</div>
+</div>
+
+## Les intercommunalités : le classement
 
 ```sql id=epci
-SELECT g.libgeo, g.codegeo, g.departement,
+SELECT g.libgeo, g.codegeo,
        MAX(CASE WHEN code_indicateur = 'nb_actifs_occupes' THEN nombre END) AS nb_actifs,
        MAX(CASE WHEN code_indicateur = 'part_voiture' THEN nombre END) AS part_voiture,
        MAX(CASE WHEN code_indicateur = 'part_tc' THEN nombre END) AS part_tc,
        MAX(CASE WHEN code_indicateur = 'taux_pauvrete' THEN nombre END) AS taux_pauvrete,
-       MAX(CASE WHEN code_indicateur = 'mediane_niveau_vie' THEN nombre END) AS mediane,
-       MAX(CASE WHEN code_indicateur = 'nb_gares' THEN nombre END) AS nb_gares
+       MAX(CASE WHEN code_indicateur = 'mediane_niveau_vie' THEN nombre END) AS mediane
 FROM fact_mobilite f
 JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
 WHERE f.maille = 'EPCI'
-GROUP BY g.libgeo, g.codegeo, g.departement
-ORDER BY taux_pauvrete DESC NULLS LAST
+GROUP BY g.libgeo, g.codegeo
 ```
-
-<div class="grid grid-cols-2">
-<div class="card">
 
 ```js
-Plot.plot({
-  width,
-  height: 420,
-  grid: true,
-  x: {label: "Taux de pauvreté (%)"},
-  y: {label: "Part modale voiture (%)"},
-  r: {range: [3, 30]},
-  marks: [
-    Plot.dot(epci, {x: "taux_pauvrete", y: "part_voiture", r: "nb_actifs", fill: (d) => couleursDep.get(d.departement), fillOpacity: 0.6, stroke: "white", tip: true,
-      title: (d) => `${d.libgeo}\npauvreté ${fmtPct(d.taux_pauvrete)} · voiture ${fmtPct(d.part_voiture)}\n${fmtInt(d.nb_actifs)} actifs · ${d.nb_gares ?? 0} pôles ferrés`}),
-    Plot.text(epci.toArray().filter((d) => d.nb_actifs > 150000 || d.taux_pauvrete > 25), {x: "taux_pauvrete", y: "part_voiture", text: (d) => d.libgeo.replace(/^(CA|CC|CU|EPT) /, ""), dy: -12, fontSize: 10, fill: "#4e5864"})
-  ]
-})
+// Intercommunalité mise en avant dans le classement et le tableau (null = aucune).
+const epciChoisi = Mutable(null);
+const choisirEpci = (code) => { epciChoisi.value = code; };
 ```
-
-</div>
-<div class="card">
 
 ```js
-Inputs.table(epci.toArray().map((d) => ({EPCI: d.libgeo, Actifs: d.nb_actifs, "Pauvreté %": d.taux_pauvrete, "Niveau de vie": d.mediane, "Voiture %": d.part_voiture, "TC %": d.part_tc, Gares: d.nb_gares ?? 0})), {
-  format: {Actifs: fmtInt, "Pauvreté %": fmtPct, "Niveau de vie": fmtEur, "Voiture %": fmtPct, "TC %": fmtPct},
-  select: false, rows: 14
-})
+const lignesEpci = epci.toArray();
+const optionsEpci = new Map(lignesEpci.map((d) => [d.libgeo, d.codegeo]));
+const criteres = new Map([
+  ["Taux de pauvreté (%)", "taux_pauvrete"],
+  ["Habitants allant travailler en voiture (%)", "part_voiture"],
+  ["Habitants allant travailler en transports en commun (%)", "part_tc"],
+  ["Niveau de vie médian (€ par an)", "mediane"]
+]);
+```
+
+<div class="filtres">
+
+```js
+const critere = view(Inputs.select(criteres, {label: "Classer selon", value: "taux_pauvrete"}));
+```
+
+```js
+const nbBarres = view(Inputs.radio(new Map([["Les 10 premières", 10], ["Les 20 premières", 20]]), {label: "Afficher", value: 10}));
+```
+
+```js
+display(recherche(optionsEpci, {
+  label: "Rechercher une intercommunalité",
+  placeholder: "Tapez un nom, par exemple Plaine Commune",
+  surChoix: choisirEpci
+}));
 ```
 
 </div>
+
+```js
+const libCritere = [...criteres].find(([, code]) => code === critere)[0];
+const fmtCritere = (v) => (v == null ? "–" : critere === "mediane" ? fmtEur(v) : fmtPct(v));
+const E = lignesEpci.find((d) => d.codegeo === epciChoisi);
+// L'intercommunalité recherchée est toujours affichée, même si elle n'est pas dans les premières.
+const classement = [...lignesEpci].filter((d) => d[critere] != null).sort((a, b) => b[critere] - a[critere]);
+const visibles = classement.slice(0, nbBarres);
+if (E && E[critere] != null && !visibles.includes(E)) visibles.push(E);
+```
+
+<div class="card">
+
+## ${libCritere}
+
+```js
+resize((width) => barresClassees(visibles, {
+  valeur: critere, nom: "libgeo", width,
+  etiquette: (d) => `${fmtCritere(d[critere])}${d === E ? `  (rang ${classement.indexOf(d) + 1} sur ${classement.length})` : ""}`,
+  couleur: (d) => (d === E ? IDFM.encre : IDFM.bleu),
+  max: nbBarres + 1, margeGauche: Math.min(300, width * 0.4), margeDroite: 170, longueurNom: 44,
+  surClic: (d) => choisirEpci(d.codegeo)
+}))
+```
+
+<div class="note"><b>Comment lire ce graphique.</b> Les intercommunalités où la valeur est la plus élevée, pour le critère choisi dans les filtres. Cherchez une intercommunalité par son nom, ou cliquez sur une barre : elle passe en foncé et son rang s'affiche.</div>
+
 </div>
 
-## Chômage par zone d'emploi
+## Où le chômage est-il le plus fort ?
 
 ```sql id=chomage
-SELECT g.libgeo, f.nombre AS taux_chomage, f.periode,
-       (SELECT nombre FROM fact_mobilite x WHERE x.maille = f.maille AND x.codegeo = f.codegeo AND x.code_indicateur = 'part_tc') AS part_tc,
-       (SELECT nombre FROM fact_mobilite x WHERE x.maille = f.maille AND x.codegeo = f.codegeo AND x.code_indicateur = 'nb_actifs_occupes') AS nb_actifs
+SELECT g.libgeo, f.nombre AS taux_chomage, f.periode
 FROM fact_mobilite f
 JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
 WHERE f.maille = 'Zone d''emploi' AND f.code_indicateur = 'taux_chomage'
@@ -155,23 +179,52 @@ ORDER BY f.nombre DESC
 
 <div class="card">
 
+## Taux de chômage par zone d'emploi (${chomage.get(0)?.periode ?? ""})
+
 ```js
-Plot.plot({
-  width,
-  height: 380,
-  marginLeft: 170,
-  x: {label: `Taux de chômage (%, ${chomage.get(0)?.periode ?? ""})`},
-  y: {label: null},
-  color: {type: "linear", scheme: "blues", domain: [0, d3.max(chomage, (d) => d.taux_chomage)]},
-  marks: [
-    Plot.barX(chomage, {x: "taux_chomage", y: "libgeo", sort: {y: "x", reverse: true}, fill: "taux_chomage", tip: true,
-      title: (d) => `${d.libgeo}\nchômage ${fmtPct(d.taux_chomage)} · TC ${fmtPct(d.part_tc)}\n${fmtInt(d.nb_actifs)} actifs`}),
-    Plot.text(chomage, {x: "taux_chomage", y: "libgeo", text: (d) => fmtPct(d.taux_chomage), dx: 4, textAnchor: "start", fontSize: 11}),
-    Plot.ruleX([0])
-  ]
+resize((width) => barresClassees(chomage, {
+  valeur: "taux_chomage", nom: "libgeo", width,
+  etiquette: (d) => fmtPct(d.taux_chomage),
+  max: 15, margeGauche: 190, margeDroite: 70
+}))
+```
+
+<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes qui travaillent ou cherchent un emploi, le nombre de celles qui sont au chômage, dans chaque zone d'emploi. La zone la plus touchée est en haut.</div>
+
+</div>
+
+## Toutes les intercommunalités
+
+```js
+const filtreTableau = view(Inputs.search(lignesEpci, {placeholder: "Filtrer le tableau : tapez un nom…", label: "Filtrer"}));
+```
+
+<div class="card">
+
+```js
+Inputs.table(filtreTableau.map((d) => ({"Intercommunalité": d.libgeo, "Habitants ayant un emploi": d.nb_actifs, "Taux de pauvreté": d.taux_pauvrete, "Niveau de vie médian": d.mediane, "En voiture": d.part_voiture, "En transports en commun": d.part_tc})), {
+  format: {"Habitants ayant un emploi": fmtInt, "Taux de pauvreté": fmtPct, "Niveau de vie médian": fmtEur, "En voiture": fmtPct, "En transports en commun": fmtPct},
+  sort: "Taux de pauvreté", reverse: true,
+  select: false, rows: 12
 })
 ```
 
-<div class="note">Taux de chômage localisés (INSEE), moyenne trimestrielle au sens du BIT, zonage en zones d'emploi 2020. Les zones d'emploi dépassant l'Île-de-France sont comptées pour leur partie francilienne.</div>
+<div class="note"><b>Comment lire ce tableau.</b> Une ligne par intercommunalité. Cliquez sur le titre d'une colonne pour trier. Le champ « Filtrer » réduit le tableau aux noms qui contiennent le texte tapé.</div>
 
 </div>
+
+## Lexique
+
+```js
+display(lexique(["Niveau de vie médian", "Taux de pauvreté", "Taux de chômage", "Intercommunalité (EPCI)", "Zone d'emploi", "Part d'un mode de transport", "Actif occupé"]))
+```
+
+## Sources des données
+
+```js
+display(piedSources(["INSEE"], [
+  "Recensement de la population 2022, fichier « mobilités professionnelles » (INSEE) : mode de transport des habitants.",
+  "Filosofi 2021 (INSEE) : niveau de vie médian et taux de pauvreté.",
+  "Taux de chômage localisés (INSEE) : taux par zone d'emploi, dernier trimestre publié."
+]))
+```
