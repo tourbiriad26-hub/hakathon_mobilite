@@ -74,13 +74,15 @@ Plot.plot({
   width,
   height: 340,
   marginLeft: 260,
-  x: {label: `${libY} — moyenne du groupe`, grid: true},
+  // marge à droite pour que l'étiquette de la plus longue barre ne soit pas coupée
+  x: {label: `${libY} — moyenne du groupe`, grid: true, domain: [0, (d3.max(groupes, (d) => d.valeur) ?? 0) * 1.15]},
   y: {label: null, domain: groupes.map((d) => d.groupe)},
-  color: {type: "linear", scheme: "blues"},
+  // dégradé qui reste bien visible sur fond clair comme sur fond sombre
+  color: {type: "linear", range: ["#93c5fd", "#1e3a8a"]},
   marks: [
     Plot.barX(groupes, {x: "valeur", y: "groupe", fill: "valeur", tip: true,
       title: (d) => `${d.groupe}\n${libY} : ${fmtPct(d.valeur)}\n${d.n} communes · ${fmtInt(d.actifs)} actifs`}),
-    Plot.text(groupes, {x: "valeur", y: "groupe", text: (d) => fmtPct(d.valeur), dx: 6, textAnchor: "start", fontSize: 14, fontWeight: "bold"}),
+    Plot.text(groupes, {x: "valeur", y: "groupe", text: (d) => fmtPct(d.valeur), dx: 6, textAnchor: "start", fontSize: 14, fontWeight: "bold", fill: "currentColor"}),
     Plot.ruleX([0])
   ]
 })
