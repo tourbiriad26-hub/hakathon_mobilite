@@ -417,12 +417,12 @@ figure > div[class$="-swatches"],
 /* ------------------------------------------------------------------
    Cartes et barres cliquables
    ------------------------------------------------------------------ */
-.carte-cliquable g[aria-label="zones"] path {
+.carte-cliquable g.zones path {
   cursor: pointer;
   transition: fill-opacity 0.12s ease;
 }
 
-.carte-cliquable g[aria-label="zones"] path:hover {
+.carte-cliquable g.zones path:hover {
   fill: #25303b;
   fill-opacity: 0.18;
   stroke: #25303b;

@@ -66,14 +66,19 @@ export function carte({fc, fcDep, width, valeur, couleur, titre, contour = 0.3, 
       Plot.geo(fcDep, {stroke: IDFM.gris, strokeWidth: 0.8, fill: "none"}),
       ...marques,
       ...(choisis.length ? [Plot.geo(choisis, {fill: "none", stroke: IDFM.encre, strokeWidth: 2.2})] : []),
-      ...(interactif ? [Plot.geo(fc, {fill: "white", fillOpacity: 0, stroke: "none", ariaLabel: "zones", ...(titre ? {tip: true, title: titre} : {})})] : [])
+      ...(interactif ? [Plot.geo(fc, {fill: "white", fillOpacity: 0, stroke: "none", ...(titre ? {tip: true, title: titre} : {})})] : [])
     ]
   });
-  if (surClic) {
-    const zones = plot.querySelectorAll('g[aria-label="zones"] path');
-    if (zones.length === fc.features.length) {
-      zones.forEach((zone, i) => zone.addEventListener("click", () => surClic(fc.features[i].properties)));
-      plot.classList.add("carte-cliquable");
+  if (interactif) {
+    // Le calque transparent posé au-dessus de la carte : le dernier calque qui contient tous les territoires.
+    const calques = [...plot.querySelectorAll('g[aria-label="geo"]')].filter((g) => g.children.length === fc.features.length);
+    const calque = calques[calques.length - 1];
+    if (calque) {
+      calque.classList.add("zones");
+      if (surClic) {
+        [...calque.children].forEach((zone, i) => zone.addEventListener("click", () => surClic(fc.features[i].properties)));
+        plot.classList.add("carte-cliquable");
+      }
     }
   }
   return plot;
