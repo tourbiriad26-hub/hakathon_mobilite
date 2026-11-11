@@ -90,6 +90,17 @@ jobs:
       - name: Conserver les fichiers de la version précédente
         run: python scripts/conserver_version_precedente.py dashboard/dist "${{ steps.pages.outputs.base_url }}"
 
+      # Dernier garde-fou avant publication : chaque Parquet du site doit commencer et finir par PAR1.
+      - name: Vérifier l'intégrité des fichiers Parquet publiés
+        run: |
+          ko=0
+          for f in $(find dashboard/dist -name '*.parquet'); do
+            if [ "$(head -c4 "$f")" != "PAR1" ] || [ "$(tail -c4 "$f")" != "PAR1" ]; then
+              echo "::error file=$f::Parquet corrompu (en-tête ou fin différent de PAR1)"; ko=1
+            fi
+          done
+          exit $ko
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dashboard/dist

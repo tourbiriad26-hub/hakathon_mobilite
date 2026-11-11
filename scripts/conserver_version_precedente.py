@@ -91,6 +91,9 @@ def main() -> int:
             contenu = get(url)
             if contenu is None:
                 continue
+            if chemin.endswith(".parquet") and (contenu[:4] != b"PAR1" or contenu[-4:] != b"PAR1"):
+                print(f"[version précédente] ignoré (Parquet invalide) : {chemin}")
+                continue
             cible.parent.mkdir(parents=True, exist_ok=True)
             cible.write_bytes(contenu)
             copies += 1
