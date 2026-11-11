@@ -12,7 +12,12 @@ Choisissez un territoire d'emploi : la carte colore chaque commune de résidence
 d'actifs qui viennent y travailler, et les flèches relient les 40 principales origines.
 
 ```js
-import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy} from "./components/format.js";
+import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy, couleursModes} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["INSEE", "Etalab", "IGN"]))
 ```
 
 ```sql id=territoires
@@ -102,9 +107,9 @@ const totalFlux = sens === "entrant" ? I.entrants : I.sortants;
 ```
 
 <div class="grid grid-cols-3">
-  <div class="card"><h2>Travaillent et résident dans le territoire</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">actifs « internes »</div></div>
-  <div class="card"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">résident ailleurs, travaillent ici</div></div>
-  <div class="card"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">résident ici, travaillent ailleurs</div></div>
+  <div class="card kpi kpi--neutre"><h2>Travaillent et résident dans le territoire</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">actifs « internes »</div></div>
+  <div class="card kpi kpi--tc"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">résident ailleurs, travaillent ici</div></div>
+  <div class="card kpi kpi--voiture"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">résident ici, travaillent ailleurs</div></div>
 </div>
 
 ```sql id=communes
@@ -174,7 +179,7 @@ Plot.plot({
   x: {label: "Actifs", tickFormat: fmtCompact},
   y: {label: null},
   marks: [
-    Plot.barX(modes, {x: "nb_actifs", y: "mode", sort: {y: "x", reverse: true}, fill: "#1d4ed8", tip: true,
+    Plot.barX(modes, {x: "nb_actifs", y: "mode", sort: {y: "x", reverse: true}, fill: (d) => couleursModes.get(d.mode) ?? "#94a3b8", tip: true,
       title: (d) => `${d.mode} : ${fmtInt(d.nb_actifs)} (${fmtPct(100 * d.nb_actifs / d3.sum(modes, (m) => m.nb_actifs))})`}),
     Plot.ruleX([0])
   ]

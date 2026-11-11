@@ -13,7 +13,12 @@ Les 25 **bassins d'emploi** de la Région croisés avec les intentions d'embauch
 les actifs rejoignent déjà ces bassins (recensement 2022).
 
 ```js
-import {fmtInt, fmtPct, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, couleursDep, nomsDep} from "./components/format.js";
+import {fmtInt, fmtPct, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, couleursDep, nomsDep, schemeIndicateur} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["France Travail", "DARES", "INSEE", "Région Île-de-France", "Île-de-France Mobilités"]))
 ```
 
 ```sql id=region
@@ -30,10 +35,10 @@ const D = demandeurs.get(0);
 ```
 
 <div class="grid grid-cols-4">
-  <div class="card"><h2>Projets de recrutement 2026</h2><div class="big">${fmtCompact(R.get("nb_projets_recrutement")?.nombre)}</div><div class="muted">intentions d'embauche déclarées (BMO)</div></div>
-  <div class="card"><h2>Jugés difficiles</h2><div class="big">${fmtPct(R.get("part_recrutements_difficiles")?.nombre)}</div><div class="muted">des projets de recrutement</div></div>
-  <div class="card"><h2>Demandeurs d'emploi (cat. A)</h2><div class="big">${fmtCompact(D.total)}</div><div class="muted">fin ${D.periode}, zones d'emploi franciliennes</div></div>
-  <div class="card"><h2>Offre de transport</h2><div class="big">${fmtInt(R.get("nb_lignes_bus")?.nombre)} bus</div><div class="muted">${fmtInt(R.get("nb_lignes_train")?.nombre)} train/RER · ${fmtInt(R.get("nb_lignes_metro")?.nombre)} métro · ${fmtInt(R.get("nb_lignes_tram")?.nombre)} tram (lignes actives)</div></div>
+  <div class="card kpi"><h2>Projets de recrutement 2026</h2><div class="big">${fmtCompact(R.get("nb_projets_recrutement")?.nombre)}</div><div class="muted">intentions d'embauche déclarées (BMO)</div></div>
+  <div class="card kpi kpi--alerte"><h2>Jugés difficiles</h2><div class="big">${fmtPct(R.get("part_recrutements_difficiles")?.nombre)}</div><div class="muted">des projets de recrutement</div></div>
+  <div class="card kpi kpi--voiture"><h2>Demandeurs d'emploi (cat. A)</h2><div class="big">${fmtCompact(D.total)}</div><div class="muted">fin ${D.periode}, zones d'emploi franciliennes</div></div>
+  <div class="card kpi kpi--tc"><h2>Offre de transport</h2><div class="big">${fmtInt(R.get("nb_lignes_bus")?.nombre)} bus</div><div class="muted">${fmtInt(R.get("nb_lignes_train")?.nombre)} train/RER · ${fmtInt(R.get("nb_lignes_metro")?.nombre)} métro · ${fmtInt(R.get("nb_lignes_tram")?.nombre)} tram (lignes actives)</div></div>
 </div>
 
 ## Les bassins d'emploi
@@ -93,7 +98,7 @@ Plot.plot({
   width,
   height: Math.min(560, width * 0.9),
   projection: {type: "mercator", domain: fcDep},
-  color: {type: mesure === "projets" ? "log" : "quantize", n: 6, scheme: mesure === "part_voiture" || mesure === "part_difficiles" ? "oranges" : "blues", legend: true, label: libMesure, tickFormat: mesure === "projets" ? fmtCompact : undefined},
+  color: {type: mesure === "projets" ? "log" : "quantize", n: 6, scheme: schemeIndicateur(mesure), legend: true, label: libMesure, tickFormat: mesure === "projets" ? fmtCompact : undefined},
   marks: [
     Plot.geo(fc, {fill: (f) => byCode.get(f.properties.codegeo)?.[mesure] ?? null, stroke: "white", strokeWidth: 1, tip: true,
       title: (f) => { const b = byCode.get(f.properties.codegeo); return `${b.libgeo}\n${libMesure} : ${fmtM(b[mesure])}\n${fmtCompact(b.projets)} projets · ${fmtPct(b.part_difficiles)} difficiles\n${b.concentration?.toFixed(0)} emplois / 100 actifs · TC ${fmtPct(b.part_tc)} · ${b.gares ?? 0} pôles ferrés`; }}),
@@ -240,7 +245,7 @@ Plot.plot({
   x: {label: `Demandeurs d'emploi (cat. A, fin ${ze.get(0)?.periode ?? ""})`, tickFormat: fmtCompact},
   y: {label: null},
   marks: [
-    Plot.barX(ze, {x: "demandeurs_a", y: "libgeo", sort: {y: "-x"}, fill: "#7c3aed", tip: true,
+    Plot.barX(ze, {x: "demandeurs_a", y: "libgeo", sort: {y: "-x"}, fill: "#1d4ed8", tip: true,
       title: (d) => `${d.libgeo}\n${fmtInt(d.demandeurs_a)} en catégorie A · ${fmtInt(d.demandeurs_abc)} en A, B, C\nchômage ${fmtPct(d.taux_chomage)} · ${fmtPct(d.part_sans_voiture)} des actifs sans voiture`}),
     Plot.ruleX([0])
   ]
@@ -257,8 +262,9 @@ Plot.plot({
   marginLeft: 150,
   x: {label: `Taux de chômage (%, ${dep.get(0)?.periode ?? ""})`},
   y: {label: null},
+  color: {type: "linear", scheme: "reds", domain: [0, d3.max(dep, (d) => d.taux_chomage)]},
   marks: [
-    Plot.barX(dep, {x: "taux_chomage", y: "libgeo", sort: {y: "-x"}, fill: (d) => d.taux_chomage >= 9 ? "#dc2626" : "#1d4ed8", tip: true,
+    Plot.barX(dep, {x: "taux_chomage", y: "libgeo", sort: {y: "-x"}, fill: "taux_chomage", tip: true,
       title: (d) => `${d.libgeo}\nchômage ${fmtPct(d.taux_chomage)}\n${fmtCompact(d.projets)} projets de recrutement 2026, ${fmtPct(d.part_difficiles)} difficiles`}),
     Plot.text(dep, {x: "taux_chomage", y: "libgeo", text: (d) => fmtPct(d.taux_chomage), dx: 4, textAnchor: "start", fontSize: 11}),
     Plot.ruleX([0])
