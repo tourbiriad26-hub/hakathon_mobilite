@@ -15,6 +15,11 @@ sur les quatre derniers trimestres publiés, croisés avec les parts modales des
 
 ```js
 import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy, couleursDep, nomsDep} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["Île-de-France Mobilités", "INSEE", "Etalab", "IGN"]))
 ```
 
 ```sql id=kpi
@@ -82,7 +87,7 @@ Plot.plot({
   width,
   height: Math.min(680, width * 0.8),
   projection: {type: "mercator", domain: fcDep},
-  color: {type: "quantile", n: 6, scheme: "greens", legend: true, label: "Part modale TC des résidents (%)"},
+  color: {type: "quantile", n: 6, scheme: "blues", legend: true, label: "Part modale TC des résidents (%)"},
   r: {range: [1, 18], label: "Validations 12 mois"},
   marks: [
     Plot.geo(fc, {fill: (f) => partTc.get(f.properties.codegeo) ?? null, stroke: "white", strokeWidth: 0.2}),
@@ -94,7 +99,7 @@ Plot.plot({
 })
 ```
 
-<div class="note">Fond : part des actifs résidents allant travailler en transports en commun (vert foncé = forte). Cercles : pôles ferrés, surface proportionnelle aux validations. Les validations ne sont pas publiées pour tous les pôles (petits points) : les données IDFM couvrent le réseau ferré hors certains tramways et hors bus.</div>
+<div class="note">Fond : part des actifs résidents allant travailler en transports en commun (bleu foncé = forte, même couleur que les transports en commun sur les autres pages). Cercles : pôles ferrés, surface proportionnelle aux validations. Les validations ne sont pas publiées pour tous les pôles (petits points) : les données IDFM couvrent le réseau ferré hors certains tramways et hors bus.</div>
 
 </div>
 

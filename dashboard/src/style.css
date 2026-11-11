@@ -34,3 +34,74 @@
 .grid .card form {
   margin: 0;
 }
+
+/* Logos des producteurs de données */
+.bandeau-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin: 4px 0 20px 0;
+  padding: 10px 14px;
+  background: var(--theme-background-alt);
+  border-radius: 8px;
+}
+
+.bandeau-sources .muted {
+  font-size: 12px;
+  color: var(--theme-foreground-muted);
+}
+
+.logo-source {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.logo-source:hover {
+  opacity: 1;
+}
+
+.logo-source img {
+  display: block;
+  width: auto;
+  max-width: 180px;
+}
+
+.logo-source .sigle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 2px solid;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.logos-cellule {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.grille-producteurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0 24px 0;
+}
+
+.grille-producteurs .card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  margin: 0;
+}
+
+.grille-producteurs .card .n {
+  font-size: 12px;
+  color: var(--theme-foreground-muted);
+}

@@ -12,7 +12,12 @@ Recensement 2022 (INSEE, fichier détail MOBPRO), 5,7 millions d'actifs occupés
 Chaque indicateur est recalculé à chaque échelle à partir des individus : rien n'est sommé à tort.
 
 ```js
-import {fmtInt, fmtPct, fmtEur, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, nomsDep} from "./components/format.js";
+import {fmtInt, fmtPct, fmtEur, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, nomsDep, couleursModes, schemeIndicateur} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["INSEE", "Île-de-France Mobilités", "Etalab", "IGN"]))
 ```
 
 ```sql id=region
@@ -95,7 +100,7 @@ Plot.plot({
   color: {
     type: estMontant && indicInfo?.type_mesure === "effectif" ? "log" : "quantile",
     n: 7,
-    scheme: indicInfo?.code_indicateur?.startsWith("part_voiture") || indicInfo?.code_indicateur === "taux_pauvrete" ? "oranges" : "blues",
+    scheme: schemeIndicateur(indicInfo?.code_indicateur),
     legend: true,
     label: `${indicInfo?.nom_indicateur ?? ""} (${indicInfo?.unite ?? ""})`,
     tickFormat: estMontant ? fmtCompact : undefined
@@ -134,6 +139,9 @@ ORDER BY g.codegeo
 
 ```js
 const libMode = new Map([["part_tc", "Transports en commun"], ["part_voiture", "Voiture"], ["part_velo", "Vélo"], ["part_marche", "Marche"], ["part_2rm", "Deux-roues motorisé"]]);
+// Départements classés de la plus forte à la plus faible part de transports en commun :
+// on lit d'un coup d'œil le passage de Paris à la petite puis à la grande couronne.
+const ordreDep = parts.toArray().filter((d) => d.code_indicateur === "part_tc").sort((a, b) => b.nombre - a.nombre).map((d) => d.departement);
 ```
 
 <div class="grid grid-cols-2">
@@ -145,10 +153,10 @@ Plot.plot({
   height: 360,
   marginLeft: 120,
   x: {label: "Part des actifs se déplaçant (%)", domain: [0, 100]},
-  y: {label: null},
+  y: {label: null, domain: ordreDep},
   color: {
     domain: [...libMode.values()],
-    range: ["#1d4ed8", "#ea580c", "#16a34a", "#9333ea", "#64748b"],
+    range: [...libMode.values()].map((m) => couleursModes.get(m)),
     legend: true
   },
   marks: [

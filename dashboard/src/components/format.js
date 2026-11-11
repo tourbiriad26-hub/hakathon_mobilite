@@ -45,6 +45,24 @@ export function indexBy(rows, key, value) {
   return m;
 }
 
+// Une couleur par mode, la même sur toutes les pages (barres, légendes, cartes).
+export const couleursModes = new Map([
+  ["Transports en commun", "#1d4ed8"], ["Voiture", "#ea580c"], ["Vélo", "#16a34a"],
+  ["Marche", "#9333ea"], ["Deux-roues motorisé", "#64748b"], ["Sans déplacement", "#cbd5e1"]
+]);
+
+// Palette de carte selon le sens de l'indicateur :
+// - une part modale prend la teinte de son mode (TC bleu, voiture orange, vélo vert...) ;
+// - un indicateur « défavorable » (pauvreté, chômage, recrutements difficiles, inégalités) va vers le rouge ;
+// - les autres (effectifs, revenus, emplois, gares) restent en bleus.
+const schemeModes = {part_tc: "blues", part_voiture: "oranges", part_velo: "greens", part_marche: "purples", part_2rm: "greys", part_sans_transport: "greys"};
+const indicateursDefavorables = new Set(["taux_pauvrete", "taux_chomage", "rapport_interdecile", "part_recrutements_difficiles", "difficiles", "part_difficiles"]);
+export function schemeIndicateur(code) {
+  if (schemeModes[code]) return schemeModes[code];
+  if (indicateursDefavorables.has(code)) return "reds";
+  return "blues";
+}
+
 export const couleursDep = new Map([
   ["75", "#1d4ed8"], ["92", "#0891b2"], ["93", "#dc2626"], ["94", "#ea580c"],
   ["77", "#65a30d"], ["78", "#7c3aed"], ["91", "#ca8a04"], ["95", "#db2777"]

@@ -13,7 +13,12 @@ Les 25 **bassins d'emploi** de la Région croisés avec les intentions d'embauch
 les actifs rejoignent déjà ces bassins (recensement 2022).
 
 ```js
-import {fmtInt, fmtPct, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, couleursDep, nomsDep} from "./components/format.js";
+import {fmtInt, fmtPct, fmtCompact, fmtIndicateur, toFeatureCollection, indexBy, couleursDep, nomsDep, schemeIndicateur} from "./components/format.js";
+import {bandeauSources} from "./components/sources.js";
+```
+
+```js
+display(bandeauSources(["France Travail", "DARES", "INSEE", "Région Île-de-France", "Île-de-France Mobilités"]))
 ```
 
 ```sql id=region
@@ -93,7 +98,7 @@ Plot.plot({
   width,
   height: Math.min(560, width * 0.9),
   projection: {type: "mercator", domain: fcDep},
-  color: {type: mesure === "projets" ? "log" : "quantize", n: 6, scheme: mesure === "part_voiture" || mesure === "part_difficiles" ? "oranges" : "blues", legend: true, label: libMesure, tickFormat: mesure === "projets" ? fmtCompact : undefined},
+  color: {type: mesure === "projets" ? "log" : "quantize", n: 6, scheme: schemeIndicateur(mesure), legend: true, label: libMesure, tickFormat: mesure === "projets" ? fmtCompact : undefined},
   marks: [
     Plot.geo(fc, {fill: (f) => byCode.get(f.properties.codegeo)?.[mesure] ?? null, stroke: "white", strokeWidth: 1, tip: true,
       title: (f) => { const b = byCode.get(f.properties.codegeo); return `${b.libgeo}\n${libMesure} : ${fmtM(b[mesure])}\n${fmtCompact(b.projets)} projets · ${fmtPct(b.part_difficiles)} difficiles\n${b.concentration?.toFixed(0)} emplois / 100 actifs · TC ${fmtPct(b.part_tc)} · ${b.gares ?? 0} pôles ferrés`; }}),
@@ -240,7 +245,7 @@ Plot.plot({
   x: {label: `Demandeurs d'emploi (cat. A, fin ${ze.get(0)?.periode ?? ""})`, tickFormat: fmtCompact},
   y: {label: null},
   marks: [
-    Plot.barX(ze, {x: "demandeurs_a", y: "libgeo", sort: {y: "-x"}, fill: "#7c3aed", tip: true,
+    Plot.barX(ze, {x: "demandeurs_a", y: "libgeo", sort: {y: "-x"}, fill: "#1d4ed8", tip: true,
       title: (d) => `${d.libgeo}\n${fmtInt(d.demandeurs_a)} en catégorie A · ${fmtInt(d.demandeurs_abc)} en A, B, C\nchômage ${fmtPct(d.taux_chomage)} · ${fmtPct(d.part_sans_voiture)} des actifs sans voiture`}),
     Plot.ruleX([0])
   ]
@@ -257,8 +262,9 @@ Plot.plot({
   marginLeft: 150,
   x: {label: `Taux de chômage (%, ${dep.get(0)?.periode ?? ""})`},
   y: {label: null},
+  color: {type: "linear", scheme: "reds", domain: [0, d3.max(dep, (d) => d.taux_chomage)]},
   marks: [
-    Plot.barX(dep, {x: "taux_chomage", y: "libgeo", sort: {y: "-x"}, fill: (d) => d.taux_chomage >= 9 ? "#dc2626" : "#1d4ed8", tip: true,
+    Plot.barX(dep, {x: "taux_chomage", y: "libgeo", sort: {y: "-x"}, fill: "taux_chomage", tip: true,
       title: (d) => `${d.libgeo}\nchômage ${fmtPct(d.taux_chomage)}\n${fmtCompact(d.projets)} projets de recrutement 2026, ${fmtPct(d.part_difficiles)} difficiles`}),
     Plot.text(dep, {x: "taux_chomage", y: "libgeo", text: (d) => fmtPct(d.taux_chomage), dx: 4, textAnchor: "start", fontSize: 11}),
     Plot.ruleX([0])

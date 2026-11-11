@@ -12,6 +12,18 @@ par [`scripts/ingest.py`](https://github.com/tourbiriad26-hub/hakathon_mobilite/
 Le site est reconstruit chaque semaine par GitHub Actions : validations IDFM, demandeurs d'emploi et
 taux de chômage se mettent à jour seuls.
 
+## Les producteurs
+
+```js
+import {logosProducteur, producteurs, tousLesProducteurs} from "./components/sources.js";
+const tout = catalogue.toArray();
+const parProducteur = new Map(tousLesProducteurs.map((p) => [p, tout.filter((d) => producteurs(d.producteur).includes(p))]));
+```
+
+<div class="grille-producteurs">
+${[...parProducteur].filter(([, l]) => l.length).map(([p, l]) => html`<div class="card">${logosProducteur(p, 40)}<div><b>${p}</b></div><div class="n">${l.filter((d) => d.statut === "intégré").length} jeu(x) intégré(s) · ${l.length} au catalogue</div></div>`)}
+</div>
+
 ## Les jeux de données du défi 2 « mobilités et emploi »
 
 Liste officielle du Hackathon, avec ce que le projet en fait :
@@ -35,8 +47,8 @@ const badge = (s) => ({"intégré": "✅", "couvert": "🟦", "disponible": "�
 Inputs.table(cat.map((d) => ({Statut: badge(d.statut), Source: d.titre, Producteur: d.producteur, Défis: d.defis, "Usage dans le projet": d.usage, Licence: d.licence, Lien: d.url})), {
   select: false,
   rows: 40,
-  width: {Statut: 90, Source: 260, Producteur: 120, Défis: 120, "Usage dans le projet": 380, Licence: 90, Lien: 160},
-  format: {Lien: (u) => htl.html`<a href=${u} target="_blank" rel="noopener">ouvrir ↗</a>`}
+  width: {Statut: 90, Source: 260, Producteur: 150, Défis: 120, "Usage dans le projet": 380, Licence: 90, Lien: 160},
+  format: {Producteur: (p) => logosProducteur(p, 18), Lien: (u) => htl.html`<a href=${u} target="_blank" rel="noopener">ouvrir ↗</a>`}
 })
 ```
 
