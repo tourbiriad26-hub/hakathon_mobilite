@@ -37,6 +37,39 @@ const R = indexBy(region, "code_indicateur", "nombre");
   <div class="card"><h2>Pôles ferrés</h2><div class="big">${fmtInt(R.get("nb_gares"))}</div><div class="muted">${fmtCompact(R.get("nb_validations_12m"))} validations sur 12 mois</div></div>
 </div>
 
+## En un coup d'œil : comment vont-ils au travail ?
+
+```js
+const modesRegion = [
+  {mode: "🚇 Transports en commun", v: R.get("part_tc")},
+  {mode: "🚗 Voiture", v: R.get("part_voiture")},
+  {mode: "🚶 Marche", v: R.get("part_marche")},
+  {mode: "🚲 Vélo", v: R.get("part_velo")},
+  {mode: "🛵 Deux-roues", v: R.get("part_2rm")}
+].filter((d) => d.v != null);
+```
+
+<div class="card">
+
+```js
+Plot.plot({
+  width,
+  height: 110,
+  marginLeft: 0,
+  x: {axis: null, domain: [0, 100]},
+  y: {axis: null},
+  color: {domain: modesRegion.map((d) => d.mode), range: ["#1d4ed8", "#ea580c", "#9333ea", "#16a34a", "#64748b"], legend: true},
+  marks: [
+    Plot.barX(modesRegion, Plot.stackX({x: "v", fill: "mode", inset: 1, tip: true, title: (d) => `${d.mode} : ${fmtPct(d.v)}`})),
+    Plot.textX(modesRegion, Plot.stackX({x: "v", z: "mode", text: (d) => d.v >= 6 ? `${Math.round(d.v)} %` : "", fill: "white", fontSize: 18, fontWeight: "bold"}))
+  ]
+})
+```
+
+<div class="note">Sur 100 Franciliens qui se déplacent pour travailler, voici leur moyen de transport principal.</div>
+
+</div>
+
 ## Carte : un indicateur, une échelle
 
 ```sql id=indicateurs
@@ -94,7 +127,7 @@ Plot.plot({
   projection: {type: "mercator", domain: fcDep},
   color: {
     type: estMontant && indicInfo?.type_mesure === "effectif" ? "log" : "quantile",
-    n: 7,
+    n: 5,
     scheme: indicInfo?.code_indicateur?.startsWith("part_voiture") || indicInfo?.code_indicateur === "taux_pauvrete" ? "oranges" : "blues",
     legend: true,
     label: `${indicInfo?.nom_indicateur ?? ""} (${indicInfo?.unite ?? ""})`,
@@ -145,7 +178,8 @@ Plot.plot({
   height: 360,
   marginLeft: 120,
   x: {label: "Part des actifs se déplaçant (%)", domain: [0, 100]},
-  y: {label: null},
+  // départements classés du plus au moins « transports en commun »
+  y: {label: null, domain: Array.from(parts).filter((d) => d.code_indicateur === "part_tc").sort((a, b) => b.nombre - a.nombre).map((d) => d.departement)},
   color: {
     domain: [...libMode.values()],
     range: ["#1d4ed8", "#ea580c", "#16a34a", "#9333ea", "#64748b"],
@@ -160,6 +194,16 @@ Plot.plot({
       tip: true,
       title: (d) => `${d.departement}\n${libMode.get(d.code_indicateur)} : ${fmtPct(d.nombre)}`
     }),
+    // pourcentage écrit dans chaque segment assez large : plus besoin de lire l'axe
+    Plot.textX(parts, Plot.stackX({
+      x: "nombre",
+      y: "departement",
+      z: (d) => libMode.get(d.code_indicateur),
+      order: (d) => [...libMode.keys()].indexOf(d.code_indicateur),
+      text: (d) => d.nombre >= 8 ? `${Math.round(d.nombre)} %` : "",
+      fill: "white",
+      fontWeight: "bold"
+    })),
     Plot.ruleX([0])
   ]
 })
