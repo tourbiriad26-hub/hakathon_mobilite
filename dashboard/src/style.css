@@ -1,0 +1,665 @@
+@import url("observablehq:default.css");
+@import url("observablehq:theme-air.css");
+
+/* ------------------------------------------------------------------
+   Charte sobre, d'après le code couleur d'Île-de-France Mobilités :
+   encre bleu-gris, un seul bleu d'accent, bordures fines, fond blanc.
+   Les mêmes valeurs sont utilisées par les graphiques (components/format.js).
+   ------------------------------------------------------------------ */
+:root {
+  --idfm-encre: #25303b;      /* texte principal */
+  --idfm-texte-2: #4e5864;    /* texte secondaire */
+  --idfm-bleu: #0268d5;       /* accent unique */
+  --idfm-bleu-pale: #f5f9ff;  /* fonds discrets */
+  --idfm-bordure: #e0e5ec;
+  --idfm-rouge: #c52625;      /* réservé aux alertes */
+
+  --theme-foreground: var(--idfm-encre);
+  --theme-foreground-muted: var(--idfm-texte-2);
+  --theme-foreground-focus: var(--idfm-bleu);
+  --theme-background: #ffffff;
+  --theme-background-alt: var(--idfm-bleu-pale);
+  --rayon: 6px;
+
+  color-scheme: light;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--idfm-encre);
+  background: #ffffff;
+}
+
+a {
+  color: var(--idfm-bleu);
+}
+
+/* ------------------------------------------------------------------
+   Titres
+   ------------------------------------------------------------------ */
+#observablehq-main > h1:first-of-type {
+  font-size: clamp(26px, 3.4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  max-width: 880px;
+  margin-top: 8px;
+}
+
+#observablehq-main > h1:first-of-type + p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--idfm-texte-2);
+  max-width: 800px;
+}
+
+#observablehq-main h2 {
+  font-size: 19px;
+  font-weight: 700;
+  margin-top: 2.4rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--idfm-bordure);
+}
+
+/* Menu du haut : des onglets, celui de la page affichée est en bleu plein */
+#observablehq-header .onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 14px;
+}
+
+#observablehq-header .onglets a {
+  color: var(--idfm-texte-2);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+#observablehq-header .onglets a:hover {
+  background: var(--idfm-bleu-pale);
+  color: var(--idfm-bleu);
+  border-color: var(--idfm-bordure);
+}
+
+#observablehq-header .onglets a.actif {
+  background: var(--idfm-bleu);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Barre latérale : lien actif en bleu, sans fond coloré */
+#observablehq-sidebar {
+  border-right: 1px solid var(--idfm-bordure);
+}
+
+#observablehq-sidebar .observablehq-link-active a {
+  color: var(--idfm-bleu);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------
+   Cartes : blanches, bordure fine, pas d'ombre
+   ------------------------------------------------------------------ */
+.card {
+  background: #ffffff;
+  border: 1px solid var(--idfm-bordure);
+  border-radius: var(--rayon);
+  box-shadow: none;
+}
+
+#observablehq-main .card h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--idfm-encre);
+  margin: 0 0 8px 0;
+  padding: 0;
+  border: none;
+}
+
+/* Libellé des indicateurs clés : petit texte gris au-dessus du chiffre */
+#observablehq-main .kpi h2,
+#observablehq-main .grid-cols-3 > .card > h2:first-child,
+#observablehq-main .grid-cols-4 > .card > h2:first-child {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--idfm-texte-2);
+  margin: 0 0 6px 0;
+}
+
+.card .big {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--idfm-encre);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.card .muted {
+  font-size: 12px;
+  color: var(--idfm-texte-2);
+  margin-top: 4px;
+}
+
+/* Indicateurs clés : tous identiques, la couleur n'est plus utilisée pour décorer.
+   Seule la carte d'alerte garde un repère rouge discret. */
+.kpi,
+.kpi--tc,
+.kpi--voiture,
+.kpi--velo,
+.kpi--marche,
+.kpi--neutre {
+  border-left: 1px solid var(--idfm-bordure);
+}
+
+.kpi .big {
+  color: var(--idfm-encre);
+}
+
+.kpi--tc .big {
+  color: var(--idfm-bleu);
+}
+
+.kpi--alerte {
+  border-top: 3px solid var(--idfm-rouge);
+}
+
+.grid .card form {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------
+   Notes de lecture : fond pâle, filet bleu
+   ------------------------------------------------------------------ */
+.note {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--idfm-texte-2);
+  background: var(--idfm-bleu-pale);
+  border-left: 3px solid var(--idfm-bleu);
+  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  margin: 14px 0 4px 0;
+}
+
+/* ------------------------------------------------------------------
+   Tableaux et contrôles
+   ------------------------------------------------------------------ */
+form[class^="inputs-"] table thead th {
+  background: var(--idfm-bleu-pale);
+  color: var(--idfm-encre);
+  font-weight: 600;
+}
+
+form[class^="inputs-"] table tbody tr:hover {
+  background: var(--idfm-bleu-pale);
+}
+
+form[class^="inputs-"] table td {
+  font-variant-numeric: tabular-nums;
+}
+
+form[class^="inputs-"] select,
+form[class^="inputs-"] input[type="text"] {
+  border: 1px solid var(--idfm-bordure);
+  border-radius: 4px;
+}
+
+form[class^="inputs-"] input[type="radio"],
+form[class^="inputs-"] input[type="checkbox"] {
+  accent-color: var(--idfm-bleu);
+}
+
+/* Graphiques : texte lisible (13 px minimum), encre foncée pour les étiquettes */
+figure svg,
+.card svg {
+  font-size: 13px;
+  color: var(--idfm-encre);
+}
+
+figure > div[class$="-swatches"],
+.card div[class$="-swatches"],
+figure > div[class$="-ramp"],
+.card div[class$="-ramp"] {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+/* Légende des cartes (dégradé) : chiffres plus grands */
+.card div[class$="-ramp"] svg {
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------
+   Logos des producteurs de données : bandeau discret
+   ------------------------------------------------------------------ */
+.bandeau-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin: 4px 0 20px 0;
+  padding: 8px 0;
+  border-top: 1px solid var(--idfm-bordure);
+  border-bottom: 1px solid var(--idfm-bordure);
+}
+
+.bandeau-sources .muted {
+  font-size: 12px;
+  color: var(--idfm-texte-2);
+}
+
+.logo-source {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  filter: grayscale(1);
+  opacity: 0.75;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.logo-source:hover {
+  filter: none;
+  opacity: 1;
+}
+
+.logo-source img {
+  display: block;
+  width: auto;
+  max-width: 160px;
+}
+
+.logo-source .sigle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1.5px solid;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.logos-cellule {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.grille-producteurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0 24px 0;
+}
+
+.grille-producteurs .card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  margin: 0;
+}
+
+.grille-producteurs .card .n {
+  font-size: 12px;
+  color: var(--idfm-texte-2);
+}
+
+/* ------------------------------------------------------------------
+   Mobile
+   ------------------------------------------------------------------ */
+@media (max-width: 640px) {
+  .card .big {
+    font-size: 24px;
+  }
+
+  .bandeau-sources {
+    gap: 10px;
+  }
+
+  .logo-source img {
+    max-width: 100px;
+  }
+
+  #observablehq-header .onglets {
+    font-size: 13px;
+  }
+
+  #observablehq-header .onglets a {
+    padding: 4px 9px;
+  }
+
+  .filtres select,
+  .filtres input[type="text"] {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Barre de filtres : même présentation sur toutes les pages
+   ------------------------------------------------------------------ */
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 28px;
+  margin: 14px 0 18px 0;
+  padding: 14px 18px 16px 18px;
+  background: var(--idfm-bleu-pale);
+  border: 1px solid var(--idfm-bordure);
+  border-radius: var(--rayon);
+}
+
+.filtres::before {
+  content: "Filtres";
+  flex-basis: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--idfm-bleu);
+}
+
+.filtres > .observablehq,
+.filtres > div {
+  margin: 0;
+}
+
+.filtres form[class^="inputs-"],
+.accueil-recherche form[class^="inputs-"] {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  --label-width: auto;
+}
+
+.filtres form[class^="inputs-"] > label,
+.accueil-recherche form[class^="inputs-"] > label {
+  width: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--idfm-encre);
+}
+
+.filtres form[class^="inputs-"] > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.filtres select,
+.filtres input[type="text"],
+.accueil-recherche input[type="text"] {
+  min-height: 36px;
+  min-width: 240px;
+  padding: 4px 10px;
+  font-size: 14px;
+  color: var(--idfm-encre);
+  background: #ffffff;
+  border: 1px solid #b8c2cf;
+  border-radius: 6px;
+}
+
+.filtres select:focus,
+.filtres input[type="text"]:focus,
+.accueil-recherche input[type="text"]:focus {
+  outline: 2px solid var(--idfm-bleu);
+  outline-offset: 1px;
+  border-color: var(--idfm-bleu);
+}
+
+.filtres label {
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------------
+   Cartes et barres cliquables
+   ------------------------------------------------------------------ */
+.carte-cliquable g.zones path {
+  cursor: pointer;
+  transition: fill-opacity 0.12s ease;
+}
+
+.carte-cliquable g.zones path:hover {
+  fill: #25303b;
+  fill-opacity: 0.18;
+  stroke: #25303b;
+  stroke-width: 1.5px;
+}
+
+.barres-cliquables g[aria-label="bar"] rect {
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.barres-cliquables g[aria-label="bar"] rect:hover {
+  opacity: 0.75;
+}
+
+/* Les barres « poussent » à l'affichage, les chiffres apparaissent en douceur */
+@keyframes pousse {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes apparait {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  g[aria-label="bar"] rect {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: pousse 0.45s ease-out both;
+  }
+
+  .card .big,
+  .fiche-ligne b {
+    animation: apparait 0.35s ease-out both;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Fiche d'un territoire ou d'une gare
+   ------------------------------------------------------------------ */
+.fiche-titre {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--idfm-bleu);
+  margin: 2px 0 6px 0;
+}
+
+.fiche .fiche-titre:not(:first-child) {
+  margin-top: 18px;
+}
+
+#observablehq-main .fiche h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+}
+
+.fiche-ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--idfm-bordure);
+  font-size: 14px;
+}
+
+.fiche-ligne span {
+  color: var(--idfm-texte-2);
+}
+
+.fiche-ligne b {
+  color: var(--idfm-encre);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------
+   Accueil : recherche, tuiles, étapes
+   ------------------------------------------------------------------ */
+.accueil-recherche {
+  background: var(--idfm-bleu-pale);
+  max-width: 640px;
+}
+
+.accueil-recherche input[type="text"] {
+  min-width: min(420px, 100%);
+  min-height: 42px;
+  font-size: 16px;
+}
+
+a.tuile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+a.tuile:hover {
+  border-color: var(--idfm-bleu);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(2, 104, 213, 0.12);
+}
+
+#observablehq-main a.tuile h2 {
+  font-size: 17px;
+  color: var(--idfm-encre);
+}
+
+a.tuile p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--idfm-texte-2);
+  flex: 1;
+}
+
+a.tuile span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--idfm-bleu);
+}
+
+.etape .numero {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--idfm-bleu);
+  color: #ffffff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.etape p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--idfm-texte-2);
+}
+
+/* ------------------------------------------------------------------
+   Lexique et sources, en bas de chaque page
+   ------------------------------------------------------------------ */
+.lexique {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  margin: 12px 0 8px 0;
+}
+
+.lexique > div {
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--idfm-bordure);
+  border-left: 3px solid var(--idfm-bleu);
+  border-radius: 0 4px 4px 0;
+}
+
+.lexique dt {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--idfm-encre);
+}
+
+.lexique dd {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--idfm-texte-2);
+}
+
+.pied-sources ul {
+  margin: 8px 0 12px 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--idfm-texte-2);
+  max-width: 900px;
+}
+
+.pied-sources .bandeau-sources {
+  margin: 0 0 8px 0;
+}
+
+.pied-sources p.muted {
+  font-size: 13px;
+  color: var(--idfm-texte-2);
+  max-width: 900px;
+}
+
+.tableau-simple {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+.tableau-simple th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--idfm-texte-2);
+  border-bottom: 1px solid var(--idfm-bordure);
+  padding: 6px 4px;
+}
+
+.tableau-simple td {
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--idfm-bordure);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Liens « page précédente / page suivante » en français */
+#observablehq-footer nav a[rel="prev"]::before {
+  content: "Page précédente";
+}
+
+#observablehq-footer nav a[rel="next"]::before {
+  content: "Page suivante";
+}
+
+.note b {
+  color: var(--idfm-encre);
+}

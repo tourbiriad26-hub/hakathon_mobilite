@@ -1,0 +1,121 @@
+---
+title: Accueil
+---
+
+```js
+// Données chargées en entier (voir components/duckdb.js) : évite les erreurs de lecture sur GitHub Pages.
+import {tablesCompletes} from "./components/duckdb.js";
+const sql = DuckDBClient.sql(tablesCompletes({
+  fact_mobilite: FileAttachment("./data/fact_mobilite.parquet"),
+  dim_geo: FileAttachment("./data/dim_geo.parquet")
+}));
+```
+
+```js
+import {fmtPct, fmtCompact, indexBy} from "./components/format.js";
+import {IDFM, barresClassees} from "./components/graphiques.js";
+import {recherche} from "./components/filtres.js";
+import {lexique} from "./components/lexique.js";
+import {piedSources} from "./components/sources.js";
+```
+
+# Aller travailler en Île-de-France
+
+Comment les habitants d'Île-de-France se rendent-ils au travail ? Où sont les emplois, les gares, les difficultés ?
+Ce site répond avec des cartes et des graphiques simples, à partir de données publiques.
+
+```sql id=region
+SELECT code_indicateur, nombre FROM fact_mobilite WHERE maille = 'Région'
+```
+
+```sql id=listeCommunes
+SELECT codegeo, libgeo, departement FROM dim_geo WHERE maille = 'Commune' ORDER BY libgeo
+```
+
+```js
+const R = indexBy(region, "code_indicateur", "nombre");
+const optionsCommunes = new Map(listeCommunes.toArray().map((d) => [`${d.libgeo} (${d.departement})`, d.codegeo]));
+```
+
+<div class="accueil-recherche card">
+<h2>Commencez par votre commune</h2>
+
+```js
+display(recherche(optionsCommunes, {
+  label: "Votre commune",
+  placeholder: "Tapez un nom, par exemple Montreuil",
+  surChoix: (code) => { location.href = `./deplacements?commune=${code}`; }
+}));
+```
+
+<div class="muted">Choisissez un nom dans la liste : la fiche de la commune s'ouvre sur la carte.</div>
+</div>
+
+## Les chiffres à retenir
+
+<div class="grid grid-cols-4">
+  <div class="card kpi"><h2>Habitants ayant un emploi</h2><div class="big">${fmtCompact(R.get("nb_actifs_occupes"))}</div><div class="muted">en Île-de-France (recensement 2022)</div></div>
+  <div class="card kpi kpi--tc"><h2>Transports en commun</h2><div class="big">${fmtPct(R.get("part_tc"))}</div><div class="muted">des trajets vers le travail</div></div>
+  <div class="card kpi"><h2>Voiture</h2><div class="big">${fmtPct(R.get("part_voiture"))}</div><div class="muted">des trajets vers le travail</div></div>
+  <div class="card kpi"><h2>Travaillent hors de leur commune</h2><div class="big">${fmtPct(R.get("part_hors_commune"))}</div><div class="muted">des habitants ayant un emploi</div></div>
+</div>
+
+## Comment va-t-on travailler ?
+
+<div class="card">
+
+```js
+const modesRegion = [
+  {mode: "Transports en commun", part: R.get("part_tc")},
+  {mode: "Voiture", part: R.get("part_voiture")},
+  {mode: "Marche à pied", part: R.get("part_marche")},
+  {mode: "Vélo", part: R.get("part_velo")},
+  {mode: "Deux-roues motorisé", part: R.get("part_2rm")}
+];
+```
+
+```js
+resize((width) => barresClassees(modesRegion, {
+  valeur: "part", nom: "mode", width,
+  etiquette: (d) => fmtPct(d.part),
+  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
+  margeGauche: 170, margeDroite: 70
+}))
+```
+
+<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un moyen de transport. Plus la barre est longue, plus il est utilisé. Le chiffre au bout de la barre est le nombre de personnes sur 100 qui l'utilisent pour aller travailler. Les transports en commun sont en bleu.</div>
+
+</div>
+
+## Explorer le site
+
+<div class="grid grid-cols-3 tuiles">
+  <a class="card tuile" href="./deplacements"><h2>Se déplacer</h2><p>La carte de toutes les communes. Cliquez sur un territoire pour voir comment ses habitants vont travailler.</p><span>Ouvrir la carte →</span></a>
+  <a class="card tuile" href="./emploi"><h2>Trouver un emploi</h2><p>Où les employeurs veulent recruter en 2026, dans quels métiers, et où le chômage est le plus fort.</p><span>Voir l'emploi →</span></a>
+  <a class="card tuile" href="./flux"><h2>D'où viennent les travailleurs</h2><p>Choisissez un territoire : la carte montre d'où viennent les personnes qui y travaillent.</p><span>Voir les trajets →</span></a>
+  <a class="card tuile" href="./inegalites"><h2>Revenus et transports</h2><p>Les communes modestes et les communes aisées n'utilisent pas les mêmes transports.</p><span>Comparer →</span></a>
+  <a class="card tuile" href="./transport"><h2>Gares et stations</h2><p>Où sont les gares, lesquelles sont les plus fréquentées, quelles communes n'en ont pas.</p><span>Voir les gares →</span></a>
+  <a class="card tuile" href="./sources"><h2>Sources et méthode</h2><p>D'où viennent les chiffres et comment ils sont calculés. Tout est public et vérifiable.</p><span>Lire →</span></a>
+</div>
+
+## Comment utiliser le site
+
+<div class="grid grid-cols-3">
+  <div class="card etape"><div class="numero">1</div><h2>Choisissez</h2><p>Chaque page a une barre « Filtres » : un indicateur, un territoire, un zoom. Le champ de recherche trouve une commune ou une gare par son nom.</p></div>
+  <div class="card etape"><div class="numero">2</div><h2>Cliquez</h2><p>Les cartes et les barres sont cliquables. Un clic sur un territoire affiche sa fiche et met à jour les graphiques de la page.</p></div>
+  <div class="card etape"><div class="numero">3</div><h2>Lisez</h2><p>Sous chaque graphique, un encadré « Comment lire » explique ce qu'il montre. Le lexique en bas de page définit les mots utilisés.</p></div>
+</div>
+
+## Lexique
+
+```js
+display(lexique(["Actif occupé", "Trajet domicile-travail", "Part d'un mode de transport", "Transports en commun", "Commune"]))
+```
+
+## Sources des données
+
+```js
+display(piedSources(["INSEE"], [
+  "Recensement de la population 2022, fichier « mobilités professionnelles » (INSEE) : mode de transport et lieu de travail des habitants ayant un emploi."
+]))
+```
