@@ -15,6 +15,8 @@ const sql = DuckDBClient.sql(tablesCompletes({
 import {fmtInt, fmtPct, fmtEur} from "./components/format.js";
 import {IDFM, barresClassees, barresModes} from "./components/graphiques.js";
 import {recherche} from "./components/filtres.js";
+import {selecteurTerritoires, valeursDe} from "./components/territoires.js";
+import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
 import {lexique} from "./components/lexique.js";
 import {piedSources} from "./components/sources.js";
 ```
@@ -22,6 +24,97 @@ import {piedSources} from "./components/sources.js";
 # Les communes modestes et les communes aisées se déplacent-elles pareil ?
 
 On compare les revenus des habitants et leur façon d'aller travailler : transports en commun ou voiture.
+
+```sql id=listeGeo
+SELECT maille, codegeo, libgeo, departement, epci, zone_emploi, bassin_emploi, region FROM dim_geo
+```
+
+```js
+const geoLignes = listeGeo.toArray();
+const selecteur = selecteurTerritoires(geoLignes);
+```
+
+```js
+const T = view(selecteur);
+```
+
+```sql id=profil
+SELECT maille, codegeo, code_indicateur, nombre FROM fact_mobilite
+WHERE (maille = ${T.maille} AND codegeo = ${T.codegeo})
+   OR (maille = ${T.mailleComp} AND codegeo = ${T.codegeoComp})
+   OR maille = 'Région'
+```
+
+```js
+const lignesProfil = profil.toArray();
+const P = valeursDe(lignesProfil, T.maille, T.codegeo);
+const C = valeursDe(lignesProfil, T.mailleComp, T.codegeoComp);
+const R = valeursDe(lignesProfil, "Région", "11");
+const ratio = (v) => (v == null ? "–" : v.toFixed(1).replace(".", ","));
+const revenusAbsents = P.get("mediane_niveau_vie") == null;
+```
+
+## Les revenus du territoire
+
+```js
+display(revenusAbsents
+  ? html`<p class="indisponible">Les revenus ne sont pas publiés pour ${T.libgeo} (bassins d'emploi, et communes trop petites pour le secret statistique). Choisissez une commune plus grande, une intercommunalité ou un département.</p>`
+  : html`<span></span>`);
+```
+
+```js
+display(rangeeKpi([
+  kpi("Niveau de vie médian", fmtEur(P.get("mediane_niveau_vie")), `par an et par personne, ${T.libgeo}`, {accent: "bleu"}),
+  kpi("Taux de pauvreté", fmtPct(P.get("taux_pauvrete")), "des habitants sous le seuil de pauvreté", {accent: "alerte"}),
+  kpi("Écart entre riches et modestes", ratio(P.get("rapport_interdecile")), "fois : revenu des 10 % les plus aisés comparé aux 10 % les plus modestes"),
+  kpi("N'ont pas de voiture", fmtPct(P.get("part_menages_sans_voiture")), "des habitants ayant un emploi")
+]));
+```
+
+<div class="grid grid-cols-3">
+<div class="card grid-colspan-2">
+
+## Transports en commun ou voiture ?
+
+```js
+const lignesModes = [
+  {nom: T.libgeo, tc: P.get("part_tc"), voiture: P.get("part_voiture")},
+  {nom: T.libgeoComp, tc: C.get("part_tc"), voiture: C.get("part_voiture")},
+  {nom: "Île-de-France", tc: R.get("part_tc"), voiture: R.get("part_voiture")}
+].filter((d, i, tous) => d.tc != null && tous.findIndex((x) => x.nom === d.nom) === i);
+```
+
+```js
+resize((width) => barresModes(lignesModes, {width, margeGauche: Math.min(190, width * 0.32)}))
+```
+
+<div class="note"><b>Comment lire ce graphique.</b> Une ligne par territoire : le territoire principal, le territoire de comparaison et l'Île-de-France. Chaque barre représente 100 habitants qui se déplacent pour aller travailler : en bleu ceux qui prennent les transports en commun, en foncé ceux qui prennent la voiture.</div>
+
+</div>
+<div class="card">
+
+<div class="fiche-titre">Comparaison</div>
+
+```js
+display(tableauComparaison(T.libgeo, T.libgeoComp, [
+  {libelle: "Niveau de vie médian par an", a: P.get("mediane_niveau_vie"), b: C.get("mediane_niveau_vie"), format: fmtEur},
+  {libelle: "Taux de pauvreté", a: P.get("taux_pauvrete"), b: C.get("taux_pauvrete"), format: fmtPct},
+  {libelle: "Écart entre riches et modestes", a: P.get("rapport_interdecile"), b: C.get("rapport_interdecile"), format: ratio},
+  {libelle: "Vont travailler en voiture", a: P.get("part_voiture"), b: C.get("part_voiture"), format: fmtPct},
+  {libelle: "N'ont pas de voiture", a: P.get("part_menages_sans_voiture"), b: C.get("part_menages_sans_voiture"), format: fmtPct}
+]));
+```
+
+</div>
+</div>
+
+```js
+display(aSavoir(
+  "Le « niveau de vie » est le revenu dont dispose un ménage après impôts et aides, rapporté au nombre de personnes qui le composent. « Médian » signifie que la moitié des habitants a moins, l'autre moitié a plus.",
+  "Le taux de pauvreté est la part des habitants dont le niveau de vie est inférieur à 60 % du niveau de vie médian en France. Il n'est publié que pour les communes d'une certaine taille."
+));
+display(source("INSEE, Filosofi 2021 et recensement de la population 2022."));
+```
 
 ## Cinq groupes de communes, de la plus modeste à la plus aisée
 
@@ -159,7 +252,7 @@ resize((width) => barresClassees(visibles, {
   etiquette: (d) => `${fmtCritere(d[critere])}${d === E ? `  (rang ${classement.indexOf(d) + 1} sur ${classement.length})` : ""}`,
   couleur: (d) => (d === E ? IDFM.encre : IDFM.bleu),
   max: nbBarres + 1, margeGauche: Math.min(280, width * 0.38), margeDroite: 170,
-  surClic: (d) => choisirEpci(d.codegeo)
+  surClic: (d) => { choisirEpci(d.codegeo); selecteur.choisir("EPCI", d.codegeo); }
 }))
 ```
 

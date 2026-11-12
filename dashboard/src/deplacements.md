@@ -12,36 +12,119 @@ const sql = DuckDBClient.sql(tablesCompletes({
 ```
 
 ```js
-import {fmtInt, fmtPct, fmtEur, toFeatureCollection, indexBy, nomsDep} from "./components/format.js";
+import {fmtInt, fmtPct, fmtEur, toFeatureCollection, indexBy} from "./components/format.js";
 import {IDFM, carte, echelleCarte, barresClassees, barresModes} from "./components/graphiques.js";
+import {selecteurTerritoires, communesDe, communesDuZoom, valeursDe, extraire, nomMaille} from "./components/territoires.js";
+import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
 import {recherche} from "./components/filtres.js";
 import {lexique} from "./components/lexique.js";
 import {piedSources} from "./components/sources.js";
 ```
 
-# Comment va-t-on travailler, commune par commune ?
+# Comment va-t-on travailler ?
 
-La carte colore chaque territoire selon l'indicateur choisi. **Cliquez sur un territoire** pour afficher sa fiche à droite,
-ou cherchez une commune par son nom.
+Choisissez un territoire dans les filtres : les chiffres, les graphiques et la carte se mettent à jour.
+Vous pouvez aussi **cliquer sur la carte** pour choisir un territoire.
+
+```sql id=listeGeo
+SELECT maille, codegeo, libgeo, departement, epci, zone_emploi, bassin_emploi, region FROM dim_geo
+```
 
 ```js
-// Territoire affiché dans la fiche. Il change quand on clique sur la carte, sur une barre, ou via la recherche.
-// Un lien « ?commune=93048 » (depuis la page d'accueil) ouvre directement la fiche d'une commune.
-const codeInitial = new URLSearchParams(location.search).get("commune") ?? "";
-const territoire = Mutable({maille: "Commune", codegeo: /^[0-9][0-9AB][0-9]{3}$/.test(codeInitial) ? codeInitial : "75056"});
-const choisirTerritoire = (maille, codegeo) => { territoire.value = {maille, codegeo}; };
+const geoLignes = listeGeo.toArray();
+const selecteur = selecteurTerritoires(geoLignes);
 ```
 
-```sql id=region
-SELECT code_indicateur, nombre FROM fact_mobilite WHERE maille = 'Région'
+```js
+const T = view(selecteur);
 ```
+
+```sql id=profil
+SELECT maille, codegeo, code_indicateur, nombre FROM fact_mobilite
+WHERE (maille = ${T.maille} AND codegeo = ${T.codegeo})
+   OR (maille = ${T.mailleComp} AND codegeo = ${T.codegeoComp})
+   OR maille = 'Région'
+```
+
+```js
+const lignesProfil = profil.toArray();
+const P = valeursDe(lignesProfil, T.maille, T.codegeo);
+const C = valeursDe(lignesProfil, T.mailleComp, T.codegeoComp);
+const R = valeursDe(lignesProfil, "Région", "11");
+const nb = (v) => (v == null ? "–" : fmtInt(v));
+```
+
+## Les habitants et leurs trajets
+
+```js
+display(rangeeKpi([
+  kpi("Habitants ayant un emploi", nb(P.get("nb_actifs_occupes")), `${T.libgeo}, recensement 2022`),
+  kpi("En transports en commun", fmtPct(P.get("part_tc")), "des trajets vers le travail", {accent: "bleu"}),
+  kpi("En voiture", fmtPct(P.get("part_voiture")), "des trajets vers le travail"),
+  kpi("Travaillent hors de leur commune", fmtPct(P.get("part_hors_commune")), "des habitants ayant un emploi")
+]));
+```
+
+<div class="grid grid-cols-3">
+<div class="card grid-colspan-2">
+
+## Les moyens de transport : ${T.libgeo}
+
+```js
+const modesTerritoire = [
+  {mode: "Transports en commun", part: P.get("part_tc")},
+  {mode: "Voiture", part: P.get("part_voiture")},
+  {mode: "Marche à pied", part: P.get("part_marche")},
+  {mode: "Vélo", part: P.get("part_velo")},
+  {mode: "Deux-roues motorisé", part: P.get("part_2rm")}
+];
+```
+
+```js
+resize((width) => barresClassees(modesTerritoire, {
+  valeur: "part", nom: "mode", width,
+  etiquette: (d) => fmtPct(d.part),
+  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
+  margeGauche: 180, margeDroite: 70
+}))
+```
+
+<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un moyen de transport. Le chiffre au bout de la barre est le nombre de personnes sur 100 qui l'utilisent pour aller travailler. Les transports en commun sont en bleu.</div>
+
+</div>
+<div class="card">
+
+<div class="fiche-titre">Comparaison</div>
+
+```js
+display(tableauComparaison(T.libgeo, T.libgeoComp, [
+  {libelle: "Transports en commun", a: P.get("part_tc"), b: C.get("part_tc"), format: fmtPct},
+  {libelle: "Voiture", a: P.get("part_voiture"), b: C.get("part_voiture"), format: fmtPct},
+  {libelle: "Marche à pied", a: P.get("part_marche"), b: C.get("part_marche"), format: fmtPct},
+  {libelle: "Vélo", a: P.get("part_velo"), b: C.get("part_velo"), format: fmtPct},
+  {libelle: "Travaillent hors de leur commune", a: P.get("part_hors_commune"), b: C.get("part_hors_commune"), format: fmtPct},
+  {libelle: "N'ont pas de voiture", a: P.get("part_menages_sans_voiture"), b: C.get("part_menages_sans_voiture"), format: fmtPct}
+]));
+```
+
+</div>
+</div>
+
+```js
+display(aSavoir(
+  "Un « habitant ayant un emploi » est une personne de 15 ans ou plus qui travaille, comptée là où elle habite.",
+  "Chaque personne indique le moyen de transport qu'elle utilise le plus souvent pour aller travailler. Les pourcentages sont calculés sur les personnes qui se déplacent : celles qui travaillent chez elles ne sont pas comptées."
+));
+display(source("INSEE, recensement de la population 2022 (fichier « mobilités professionnelles »)."));
+```
+
+## La carte
 
 ```sql id=listeCommunes
 SELECT codegeo, libgeo, departement FROM dim_geo WHERE maille = 'Commune' ORDER BY libgeo
 ```
 
 ```js
-const R = indexBy(region, "code_indicateur", "nombre");
 const optionsCommunes = new Map(listeCommunes.toArray().map((d) => [`${d.libgeo} (${d.departement})`, d.codegeo]));
 const indicOptions = new Map([
   ["Vont travailler en transports en commun (%)", "part_tc"],
@@ -52,28 +135,27 @@ const indicOptions = new Map([
   ["Travaillent hors de leur commune (%)", "part_hors_commune"],
   ["Niveau de vie médian (€ par an)", "mediane_niveau_vie"]
 ]);
-const zoomOptions = new Map([["Toute l'Île-de-France", ""], ...[...nomsDep].map(([code, nom]) => [nom, code])]);
 ```
 
-<div class="filtres">
+<div class="filtres filtres-carte">
 
 ```js
-const indicateur = view(Inputs.select(indicOptions, {label: "Indicateur", value: "part_tc"}));
-```
-
-```js
-const maille = view(Inputs.radio(["Commune", "Département"], {label: "Découpage", value: "Commune"}));
+const indicateur = view(Inputs.select(indicOptions, {label: "Indicateur de la carte", value: "part_tc"}));
 ```
 
 ```js
-const zoomCode = view(Inputs.select(zoomOptions, {label: "Zoom sur", value: ""}));
+const decoupage = view(Inputs.radio(["Commune", "Département"], {label: "Découpage", value: "Commune"}));
+```
+
+```js
+const vue = view(Inputs.radio(new Map([["Zoom sur le territoire", "territoire"], ["Toute la région", "region"]]), {label: "Vue", value: "territoire"}));
 ```
 
 ```js
 display(recherche(optionsCommunes, {
   label: "Rechercher une commune",
   placeholder: "Tapez un nom, par exemple Montreuil",
-  surChoix: (code) => choisirTerritoire("Commune", code)
+  surChoix: (code) => selecteur.choisir("Commune", code)
 }));
 ```
 
@@ -83,22 +165,15 @@ display(recherche(optionsCommunes, {
 SELECT f.codegeo, f.nombre, f.fiable, g.libgeo
 FROM fact_mobilite f
 JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = ${maille} AND f.code_indicateur = ${indicateur}
+WHERE f.maille = ${decoupage} AND f.code_indicateur = ${indicateur}
 ```
 
 ```sql id=geo
-SELECT codegeo, libgeo, departement, epci, geojson FROM dim_geo WHERE maille = ${maille}
+SELECT codegeo, libgeo, departement, epci, geojson FROM dim_geo WHERE maille = ${decoupage}
 ```
 
 ```sql id=departements
 SELECT codegeo, libgeo, geojson FROM dim_geo WHERE maille = 'Département'
-```
-
-```sql id=fiche
-SELECT f.code_indicateur, f.nombre, g.libgeo
-FROM fact_mobilite f
-JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = ${territoire.maille} AND f.codegeo = ${territoire.codegeo}
 ```
 
 ```js
@@ -113,9 +188,15 @@ const lignesClassement = valeurs.toArray().filter((d) => d.fiable && d.nombre !=
 ```
 
 ```js
-const F = indexBy(fiche, "code_indicateur", "nombre");
-const nomFiche = fiche.get(0)?.libgeo ?? "Territoire";
-const nb = (v) => (v == null ? "–" : fmtInt(v));
+// Communes du territoire principal, et zone sur laquelle cadrer la carte.
+const codesT = communesDe(geoLignes, T.maille, T.codegeo);
+const codesZoom = communesDuZoom(geoLignes, T.maille, T.codegeo);
+const depsZoom = new Set(geoLignes.filter((d) => d.maille === "Commune" && codesZoom?.has(d.codegeo)).map((d) => d.departement));
+const depsT = new Set(geoLignes.filter((d) => d.maille === "Commune" && codesT.has(d.codegeo)).map((d) => d.departement));
+const cadre = extraire(fc, decoupage === "Commune" ? codesZoom : depsZoom);
+const zoomCarte = vue === "territoire" && cadre.features.length ? cadre : null;
+// Le territoire principal est entouré en noir (quand il ne compte pas trop de communes, pour rester lisible).
+const entoures = decoupage === "Commune" ? (codesT.size <= 40 ? codesT : null) : (T.maille === "Région" ? null : depsT);
 ```
 
 <div class="grid grid-cols-3">
@@ -126,48 +207,52 @@ const nb = (v) => (v == null ? "–" : fmtInt(v));
 ```js
 resize((width) => carte({
   fc, fcDep, width,
-  zoom: zoomCode ? fcDep.features.find((f) => f.properties.codegeo === zoomCode) : null,
+  zoom: zoomCarte,
   valeur: valeurCarte,
   couleur: echelleCarte(fc.features.map(valeurCarte), {label: libIndic}),
-  titre: (f) => `${f.properties.libgeo}\n${fmtVal(vals.get(f.properties.codegeo)?.nombre)}\nCliquez pour ouvrir la fiche`,
-  contour: maille === "Commune" ? 0.3 : 1,
-  selection: territoire.maille === maille ? territoire.codegeo : null,
-  surClic: (p) => choisirTerritoire(maille, p.codegeo)
+  titre: (f) => `${f.properties.libgeo}\n${fmtVal(vals.get(f.properties.codegeo)?.nombre)}\nCliquez pour choisir ce territoire`,
+  contour: decoupage === "Commune" ? 0.3 : 1,
+  selection: entoures,
+  surClic: (p) => selecteur.choisir(decoupage, p.codegeo)
 }))
 ```
 
-<div class="note"><b>Comment lire cette carte.</b> Plus le bleu est foncé, plus la valeur est élevée. La légende au-dessus de la carte donne les limites de chaque couleur. En gris : pas de donnée, ou trop peu d'habitants pour un chiffre fiable. Le territoire entouré en noir est celui de la fiche.</div>
+<div class="note"><b>Comment lire cette carte.</b> Plus le bleu est foncé, plus la valeur est élevée ; la légende donne les limites de chaque couleur. En gris : pas de donnée, ou trop peu d'habitants pour un chiffre fiable. <b>Cliquez sur un territoire</b> : il devient le territoire principal, la carte zoome dessus et sa fiche s'affiche à droite.</div>
 
 </div>
 <div class="card fiche">
 
 <div class="fiche-titre">Fiche du territoire</div>
 
-## ${nomFiche}
+## ${T.libgeo}
 
-<div class="fiche-ligne"><span>Habitants ayant un emploi</span><b>${nb(F.get("nb_actifs_occupes"))}</b></div>
-<div class="fiche-ligne"><span>Vont travailler en transports en commun</span><b>${fmtPct(F.get("part_tc"))}</b></div>
-<div class="fiche-ligne"><span>Vont travailler en voiture</span><b>${fmtPct(F.get("part_voiture"))}</b></div>
-<div class="fiche-ligne"><span>Vont travailler à vélo</span><b>${fmtPct(F.get("part_velo"))}</b></div>
-<div class="fiche-ligne"><span>Vont travailler à pied</span><b>${fmtPct(F.get("part_marche"))}</b></div>
-<div class="fiche-ligne"><span>Travaillent hors de leur commune</span><b>${fmtPct(F.get("part_hors_commune"))}</b></div>
-<div class="fiche-ligne"><span>N'ont pas de voiture</span><b>${fmtPct(F.get("part_menages_sans_voiture"))}</b></div>
-<div class="fiche-ligne"><span>Niveau de vie médian (par an)</span><b>${fmtEur(F.get("mediane_niveau_vie"))}</b></div>
-<div class="fiche-ligne"><span>Gares et stations</span><b>${nb(F.get("nb_gares") ?? 0)}</b></div>
+<div class="fiche-ligne"><span>Habitants ayant un emploi</span><b>${nb(P.get("nb_actifs_occupes"))}</b></div>
+<div class="fiche-ligne"><span>Emplois situés dans le territoire</span><b>${nb(P.get("nb_emplois"))}</b></div>
+<div class="fiche-ligne"><span>Vont travailler en transports en commun</span><b>${fmtPct(P.get("part_tc"))}</b></div>
+<div class="fiche-ligne"><span>Vont travailler en voiture</span><b>${fmtPct(P.get("part_voiture"))}</b></div>
+<div class="fiche-ligne"><span>Vont travailler à vélo</span><b>${fmtPct(P.get("part_velo"))}</b></div>
+<div class="fiche-ligne"><span>Vont travailler à pied</span><b>${fmtPct(P.get("part_marche"))}</b></div>
+<div class="fiche-ligne"><span>N'ont pas de voiture</span><b>${fmtPct(P.get("part_menages_sans_voiture"))}</b></div>
+<div class="fiche-ligne"><span>Niveau de vie médian (par an)</span><b>${fmtEur(P.get("mediane_niveau_vie"))}</b></div>
+<div class="fiche-ligne"><span>Gares et stations</span><b>${nb(P.get("nb_gares") ?? 0)}</b></div>
 
-<div class="fiche-titre">Comparé à l'Île-de-France</div>
+<div class="fiche-titre">Comparé à ${T.libgeoComp}</div>
 
 ```js
 resize((width) => barresModes([
-  {nom: nomFiche.length > 16 ? nomFiche.slice(0, 15) + "…" : nomFiche, tc: F.get("part_tc"), voiture: F.get("part_voiture")},
-  {nom: "Île-de-France", tc: R.get("part_tc"), voiture: R.get("part_voiture")}
-], {width, margeGauche: 110}))
+  {nom: T.libgeo, tc: P.get("part_tc"), voiture: P.get("part_voiture")},
+  ...(T.libgeoComp !== T.libgeo ? [{nom: T.libgeoComp, tc: C.get("part_tc"), voiture: C.get("part_voiture")}] : [])
+], {width, margeGauche: Math.min(120, width * 0.34)}))
 ```
 
 <div class="muted">Sur 100 personnes qui se déplacent pour aller travailler.</div>
 
 </div>
 </div>
+
+```js
+display(source("INSEE, recensement de la population 2022 et Filosofi 2021 ; contours des communes : Etalab, IGN."));
+```
 
 ## Le classement : ${libIndic}
 
@@ -177,43 +262,20 @@ resize((width) => barresModes([
 resize((width) => barresClassees(lignesClassement, {
   valeur: "nombre", nom: "libgeo", width,
   etiquette: (d) => fmtVal(d.nombre),
-  couleur: (d) => (d.codegeo === territoire.codegeo && territoire.maille === maille ? IDFM.encre : IDFM.bleu),
+  couleur: (d) => (decoupage === T.maille && d.codegeo === T.codegeo ? IDFM.encre : IDFM.bleu),
   max: 10, margeGauche: 200, margeDroite: 80,
-  surClic: (d) => choisirTerritoire(maille, d.codegeo)
+  surClic: (d) => selecteur.choisir(decoupage, d.codegeo)
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Les 10 territoires où la valeur est la plus élevée, pour l'indicateur et le découpage choisis dans les filtres. Cliquez sur une barre pour ouvrir la fiche du territoire.</div>
-
-</div>
-
-## Transports en commun ou voiture : les 8 départements
-
-```sql id=parts
-SELECT g.libgeo AS nom,
-       MAX(CASE WHEN f.code_indicateur = 'part_tc' THEN f.nombre END) AS tc,
-       MAX(CASE WHEN f.code_indicateur = 'part_voiture' THEN f.nombre END) AS voiture
-FROM fact_mobilite f
-JOIN dim_geo g ON g.maille = f.maille AND g.codegeo = f.codegeo
-WHERE f.maille = 'Département'
-GROUP BY g.libgeo
-ORDER BY tc DESC
-```
-
-<div class="card">
-
-```js
-resize((width) => barresModes(parts, {width, margeGauche: 150}))
-```
-
-<div class="note"><b>Comment lire ce graphique.</b> Une ligne par département. La barre représente 100 personnes qui se déplacent pour aller travailler : en bleu celles qui prennent les transports en commun, en foncé celles qui prennent la voiture, en clair celles qui marchent ou roulent à vélo ou en deux-roues. Les départements sont classés de celui qui utilise le plus les transports en commun à celui qui les utilise le moins.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les 10 territoires où la valeur est la plus élevée, pour l'indicateur et le découpage choisis au-dessus de la carte. Cliquez sur une barre : le territoire devient le territoire principal.</div>
 
 </div>
 
 ## Lexique
 
 ```js
-display(lexique(["Actif occupé", "Part d'un mode de transport", "Transports en commun", "Commune", "Département", "Niveau de vie médian", "Ménage sans voiture", "Donnée peu fiable"]))
+display(lexique(["Actif occupé", "Part d'un mode de transport", "Transports en commun", "Commune", "Département", "Intercommunalité (EPCI)", "Niveau de vie médian", "Donnée peu fiable"]))
 ```
 
 ## Sources des données
