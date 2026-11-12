@@ -197,6 +197,16 @@ const cadre = extraire(fc, decoupage === "Commune" ? codesZoom : depsZoom);
 const zoomCarte = vue === "territoire" && cadre.features.length ? cadre : null;
 // Le territoire principal est entouré en noir (quand il ne compte pas trop de communes, pour rester lisible).
 const entoures = decoupage === "Commune" ? (codesT.size <= 40 ? codesT : null) : (T.maille === "Région" ? null : depsT);
+// En vue zoomée, seuls les territoires de la zone sont colorés (les autres passent en gris) et l'échelle
+// de couleurs est recalculée sur la zone : sinon tout apparaît de la même couleur.
+const codesCadre = zoomCarte ? new Set(zoomCarte.features.map((f) => f.properties.codegeo)) : null;
+const valeurAffichee = (f) => (codesCadre && !codesCadre.has(f.properties.codegeo) ? null : valeurCarte(f));
+const etiquettes = zoomCarte && zoomCarte.features.length <= 45
+  ? [Plot.text(zoomCarte.features, Plot.centroid({
+      text: (f) => f.properties.libgeo, fontSize: 11, fontWeight: 600, lineWidth: 8,
+      fill: IDFM.encre, stroke: "white", strokeWidth: 3, paintOrder: "stroke", pointerEvents: "none"
+    }))]
+  : [];
 ```
 
 <div class="grid grid-cols-3">
@@ -208,8 +218,9 @@ const entoures = decoupage === "Commune" ? (codesT.size <= 40 ? codesT : null) :
 resize((width) => carte({
   fc, fcDep, width,
   zoom: zoomCarte,
-  valeur: valeurCarte,
-  couleur: echelleCarte(fc.features.map(valeurCarte), {label: libIndic}),
+  valeur: valeurAffichee,
+  couleur: echelleCarte(fc.features.map(valeurAffichee), {label: libIndic}),
+  marques: etiquettes,
   titre: (f) => `${f.properties.libgeo}\n${fmtVal(vals.get(f.properties.codegeo)?.nombre)}\nCliquez pour choisir ce territoire`,
   contour: decoupage === "Commune" ? 0.3 : 1,
   selection: entoures,
@@ -217,7 +228,7 @@ resize((width) => carte({
 }))
 ```
 
-<div class="note"><b>Comment lire cette carte.</b> Plus le bleu est foncé, plus la valeur est élevée ; la légende donne les limites de chaque couleur. En gris : pas de donnée, ou trop peu d'habitants pour un chiffre fiable. <b>Cliquez sur un territoire</b> : il devient le territoire principal, la carte zoome dessus et sa fiche s'affiche à droite.</div>
+<div class="note"><b>Comment lire cette carte.</b> Plus le bleu est foncé, plus la valeur est élevée ; la légende donne les limites de chaque couleur. En gris : territoire hors de la zone affichée, pas de donnée, ou trop peu d'habitants pour un chiffre fiable. En vue zoomée, les couleurs comparent les territoires de la zone entre eux. <b>Cliquez sur un territoire</b> : il devient le territoire principal, la carte zoome dessus et sa fiche s'affiche à droite.</div>
 
 </div>
 <div class="card fiche">

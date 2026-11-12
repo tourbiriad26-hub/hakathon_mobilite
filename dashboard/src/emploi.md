@@ -87,7 +87,9 @@ display(rangeeKpi([
   kpi("Embauches prévues", nb(EP.get("nb_projets_recrutement")), `${refT.libgeo}, en 2026`),
   kpi("Jugées difficiles", fmtPct(EP.get("part_recrutements_difficiles")), "l'employeur craint de ne pas trouver", {accent: "alerte"}),
   kpi("Emplois saisonniers", fmtPct(EP.get("part_recrutements_saisonniers")), "des embauches prévues"),
-  kpi("Taux de chômage", fmtPct(P.get("taux_chomage")), P.get("taux_chomage") == null ? "publié par département et zone d'emploi" : `${T.libgeo}, ${periodeChomage ?? ""}`)
+  // Le taux de chômage n'existe que par département et zone d'emploi : à défaut, celui du département.
+  kpi("Taux de chômage", fmtPct(P.get("taux_chomage") ?? ligneDep?.taux_chomage),
+    P.get("taux_chomage") != null ? `${T.libgeo}, ${periodeChomage ?? ""}` : ligneDep ? `département : ${ligneDep.libgeo}, ${ligneDep.periode}` : "publié par département et zone d'emploi")
 ]));
 ```
 
@@ -244,6 +246,7 @@ ORDER BY f.nombre DESC
 const ligneT = geoLignes.find((d) => d.maille === T.maille && d.codegeo === T.codegeo);
 const depT = T.maille === "Département" ? T.codegeo : ligneT?.departement;
 const zeT = T.maille === "Zone d'emploi" ? T.codegeo : ligneT?.zone_emploi;
+const ligneDep = dep.toArray().find((d) => d.codegeo === depT);
 ```
 
 <div class="grid grid-cols-2">

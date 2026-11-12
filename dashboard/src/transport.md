@@ -162,7 +162,7 @@ resize((width) => carte({
   zoom: zoomCarte,
   selection: codesT.size <= 40 ? codesT : null,
   surClic: (p) => selecteur.choisir("Commune", p.codegeo),
-  echelles: {r: {range: [1.5, 18]}},
+  echelles: {r: {range: zoomCarte ? [3, 26] : [1.5, 18]}},
   marques: [
     Plot.geo(fcDesservies, {fill: IDFM.bleuPale, stroke: "white", strokeWidth: 0.3}),
     Plot.geo(fcDep, {stroke: IDFM.gris, strokeWidth: 0.8, fill: "none"}),
@@ -171,6 +171,11 @@ resize((width) => carte({
       fill: IDFM.bleu, fillOpacity: 0.55, stroke: "white", strokeWidth: 0.5, tip: true,
       title: (d) => `${d.nom_pole}\n${d.commune ?? "hors Île-de-France"}\n${d.nb_validations_12m ? fmtInt(d.nb_validations_12m) + " validations en 12 mois" : "fréquentation non publiée"}`
     }),
+    // En vue zoomée, le nom des gares les plus fréquentées du territoire est écrit sur la carte.
+    ...(zoomCarte ? [Plot.text(garesClassement.slice(0, 14), {
+      x: "lon", y: "lat", text: "nom_pole", dy: -12, fontSize: 11, fontWeight: 600, lineWidth: 10,
+      fill: IDFM.encre, stroke: "white", strokeWidth: 3, paintOrder: "stroke", pointerEvents: "none"
+    })] : []),
     ...(G ? [
       Plot.dot([G], {x: "lon", y: "lat", r: 9, fill: "none", stroke: IDFM.rouge, strokeWidth: 3}),
       Plot.text([G], {x: "lon", y: "lat", text: "nom_pole", dy: -16, fill: IDFM.encre, stroke: "white", strokeWidth: 4, fontWeight: 700, fontSize: 13})
