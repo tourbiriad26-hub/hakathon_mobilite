@@ -140,12 +140,17 @@ export function communesDe(lignes, maille, codegeo) {
 }
 
 // Codes des communes à afficher quand on zoome sur un territoire.
-// Pour une commune seule, on cadre sur son intercommunalité : on voit la commune et ses voisines.
+// Pour une commune seule, on cadre sur ses voisines : son intercommunalité ou son bassin d'emploi,
+// en prenant le plus petit des deux (en petite couronne, l'intercommunalité est toute la Métropole du Grand Paris).
 export function communesDuZoom(lignes, maille, codegeo) {
   if (maille === "Région") return null;
   if (maille === "Commune") {
     const commune = lignes.find((d) => d.maille === "Commune" && d.codegeo === codegeo);
-    return commune ? communesDe(lignes, "EPCI", commune.epci) : null;
+    if (!commune) return null;
+    const groupes = [communesDe(lignes, "EPCI", commune.epci), communesDe(lignes, "Bassin d'emploi", commune.bassin_emploi)]
+      .filter((g) => g.size > 1)
+      .sort((x, y) => x.size - y.size);
+    return groupes[0] ?? new Set([codegeo]);
   }
   const codes = communesDe(lignes, maille, codegeo);
   return codes.size ? codes : null;
