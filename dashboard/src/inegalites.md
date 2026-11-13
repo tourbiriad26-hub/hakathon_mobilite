@@ -266,7 +266,7 @@ resize((width) => barresClassees(visibles, {
 
 </div>
 
-## Plus on est aisé, moins on prend la voiture ?
+## Revenus et voiture : chaque intercommunalité sur un même graphique
 
 <div class="card">
 
@@ -283,7 +283,7 @@ resize((width) => nuage(lignesEpci, {
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Chaque rond est une intercommunalité : plus il est à droite, plus ses habitants sont aisés ; plus il est haut, plus ils vont travailler en voiture. La taille du rond dépend du nombre d'habitants ayant un emploi. La ligne rouge en pointillés montre la tendance générale. L'intercommunalité recherchée est en foncé. Cliquez sur un rond pour la choisir.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Chaque rond est une intercommunalité : plus il est à droite, plus ses habitants sont aisés ; plus il est haut, plus ils vont travailler en voiture. La taille du rond dépend du nombre d'habitants ayant un emploi. La ligne rouge en pointillés montre la tendance générale. Passez la souris sur un rond pour lire le nom et les chiffres de l'intercommunalité. L'intercommunalité recherchée est en foncé. Cliquez sur un rond pour la choisir.</div>
 
 </div>
 
