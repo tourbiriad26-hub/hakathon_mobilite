@@ -125,7 +125,10 @@ export function etiquettesCarte(lignes, {texte, taille = 11} = {}) {
 //   etiquette : fonction (ligne) => texte affiché au bout de la barre
 //   couleur   : couleur unique, ou fonction (ligne) => couleur
 //   surClic   : fonction (ligne) appelée quand on clique sur une barre
-export function barresClassees(donnees, {valeur, nom, etiquette, width, couleur = IDFM.bleu, max = 10, margeGauche = 180, margeDroite = 90, longueurNom = 60, infobulle, surClic} = {}) {
+//   partie    : {valeur, libelle, libelleReste} pour montrer une partie du total dans la barre
+//               (ex. les embauches jugées difficiles parmi toutes les embauches prévues) :
+//               la partie est en rouge, le reste en bleu clair, avec une légende au-dessus.
+export function barresClassees(donnees, {valeur, nom, etiquette, width, couleur = IDFM.bleu, max = 10, margeGauche = 180, margeDroite = 90, longueurNom = 60, infobulle, surClic, partie} = {}) {
   const lignes = Array.from(donnees)
     .filter((d) => d[valeur] != null && Number.isFinite(d[valeur]))
     .sort((a, b) => d3.descending(a[valeur], b[valeur]))
@@ -151,15 +154,17 @@ export function barresClassees(donnees, {valeur, nom, etiquette, width, couleur 
     style: {fontSize: `${POLICE}px`},
     x: {axis: null},
     y: {label: null, domain: lignes.map((d) => d[nom]), axis: null},
+    ...(partie ? {color: {domain: [partie.libelleReste, partie.libelle], range: ["#b3d2f3", IDFM.rouge], legend: true}} : {}),
     marks: [
       // L'axe est un calque à part : c'est lui qui sait passer les libellés longs à la ligne (lineWidth en em).
       Plot.axisY({label: null, tickSize: 0, tickFormat: libelle, lineHeight: 1.15, fontSize: POLICE}),
-      Plot.barX(lignes, {x: valeur, y: nom, fill: couleur, insetTop: 6, insetBottom: 6, title: infobulle ?? ((d) => `${d[nom]}\n${texte(d)}`), tip: true}),
+      Plot.barX(lignes, {x: valeur, y: nom, fill: partie ? () => partie.libelleReste : couleur, insetTop: 6, insetBottom: 6, title: infobulle ?? ((d) => `${d[nom]}\n${texte(d)}`), tip: true}),
+      ...(partie ? [Plot.barX(lignes, {x: (d) => d[partie.valeur] ?? 0, y: nom, fill: () => partie.libelle, insetTop: 6, insetBottom: 6, pointerEvents: "none"})] : []),
       Plot.text(lignes, {x: valeur, y: nom, text: texte, dx: 6, textAnchor: "start", fill: IDFM.encre, fontWeight: 600})
     ]
   });
   if (surClic) {
-    const barres = plot.querySelectorAll('g[aria-label="bar"] rect');
+    const barres = plot.querySelector('g[aria-label="bar"]')?.querySelectorAll("rect") ?? [];
     if (barres.length === lignes.length) {
       barres.forEach((barre, i) => barre.addEventListener("click", () => surClic(lignes[i])));
       plot.classList.add("barres-cliquables");

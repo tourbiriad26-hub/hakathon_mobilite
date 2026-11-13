@@ -101,12 +101,14 @@ display(rangeeKpi([
 ```js
 resize((width) => barresClassees(metiers, {
   valeur: "projets", nom: "metier", width,
-  etiquette: (d) => `${fmtInt(d.projets)} embauches, dont ${d.part_difficiles == null ? "–" : Math.round(d.part_difficiles) + " %"} difficiles`,
-  max: 10, margeGauche: Math.min(320, width * 0.4), margeDroite: 230
+  etiquette: (d) => `${fmtInt(d.projets)} embauches prévues`,
+  infobulle: (d) => `${d.metier}\n${fmtInt(d.projets)} embauches prévues en 2026\ndont ${fmtInt(d.difficiles ?? 0)} que l'employeur juge difficiles à pourvoir (${d.part_difficiles == null ? "–" : Math.round(d.part_difficiles) + " %"})`,
+  partie: {valeur: "difficiles", libelle: "Difficiles à pourvoir selon l'employeur", libelleReste: "Autres embauches prévues"},
+  max: 10, margeGauche: Math.min(320, width * 0.4), margeDroite: 170
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un métier. Plus la barre est longue, plus les employeurs prévoient d'embaucher dans ce métier en 2026. Le texte indique aussi la part des embauches jugées difficiles.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un métier : sa longueur est le nombre d'embauches que les employeurs prévoient en 2026. La partie <b>rouge</b> correspond aux embauches pour lesquelles l'employeur pense avoir du mal à trouver quelqu'un (manque de candidats, horaires, trajet…). Plus la partie rouge est grande, plus le métier peine à recruter. Passez la souris sur une barre pour lire les chiffres exacts.</div>
 
 </div>
 <div class="card">

@@ -1137,3 +1137,38 @@ a.tuile:hover {
 .lexique > div {
   border-radius: 0 var(--rayon) var(--rayon) 0;
 }
+
+/* ------------------------------------------------------------------
+   Un seul menu : la barre latérale de gauche (le menu du haut est retiré)
+   ------------------------------------------------------------------ */
+#observablehq-header {
+  display: none;
+}
+
+#observablehq-sidebar nav a,
+#observablehq-sidebar summary {
+  font-size: 14px;
+}
+
+#observablehq-sidebar .observablehq-link-active a {
+  color: var(--idfm-bleu);
+  font-weight: 700;
+}
+
+.equipe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px 0;
+}
+
+.equipe span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--idfm-encre);
+  background: #ffffff;
+  border: 1px solid #dbe8fa;
+  border-radius: 999px;
+  padding: 5px 14px;
+  box-shadow: var(--ombre-idfm);
+}

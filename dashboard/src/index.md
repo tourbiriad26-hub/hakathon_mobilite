@@ -109,6 +109,12 @@ resize((width) => barresClassees(modesRegion, {
   <div class="card etape"><div class="numero">3</div><h2>Lisez</h2><p>Sous chaque graphique, « Comment lire » explique ce qu'il montre. Les encadrés « À savoir » et le catalogue des données définissent chaque indicateur.</p></div>
 </div>
 
+## L'équipe
+
+Projet réalisé pour le Hackathon Mobilités 2026 d'Île-de-France Mobilités, défi 2 « Les mobilités et l'emploi ».
+
+<div class="equipe"><span>Taha Yassine TOURBI</span><span>Kris LOKOUN</span><span>Mohamed-sami MECHAIAKH</span><span>Arsene TOGNIFODE</span><span>Soriba TORE</span></div>
+
 ## Lexique
 
 ```js

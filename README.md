@@ -1,5 +1,9 @@
 # Hackathon mobilité Paris — mobilité domicile-travail en Île-de-France
 
+**Équipe :** Taha Yassine TOURBI, Kris LOKOUN, Mohamed-sami MECHAIAKH, Arsene TOGNIFODE, Soriba TORE  
+**Défi :** Défi 2 — Les mobilités et l'emploi  
+**Site :** https://tourbiriad26-hub.github.io/hakathon_mobilite/
+
 Pipeline de données ouvertes et dashboard pour le défi « emploi » : comment les Franciliens vont-ils
 travailler, d'où viennent les actifs d'un territoire, et quel lien avec les revenus, le chômage et
 l'offre ferrée ?
