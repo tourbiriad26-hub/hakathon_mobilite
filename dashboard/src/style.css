@@ -1217,3 +1217,81 @@ a.tuile:hover {
   padding: 5px 14px;
   box-shadow: var(--ombre-idfm);
 }
+
+/* ------------------------------------------------------------------
+   Bouton « Exporter en PDF » (en haut à droite de chaque page)
+   ------------------------------------------------------------------ */
+.bouton-pdf {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 600 14px Raleway, sans-serif;
+  color: #ffffff;
+  background: var(--idfm-bleu);
+  border: none;
+  border-radius: 999px;
+  padding: 9px 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 104, 213, 0.3);
+  transition: background 0.12s ease;
+}
+
+.bouton-pdf:hover {
+  background: #01458d;
+}
+
+/* ------------------------------------------------------------------
+   Export PDF : mise en page imprimée (paysage, sans menu ni boutons)
+   ------------------------------------------------------------------ */
+@page {
+  size: A4 landscape;
+  margin: 12mm;
+}
+
+@media print {
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #ffffff !important;
+  }
+
+  .bouton-pdf,
+  #observablehq-sidebar,
+  #observablehq-sidebar-toggle,
+  label[for="observablehq-sidebar-toggle"],
+  #observablehq-header,
+  #observablehq-footer nav,
+  .accueil-recherche {
+    display: none !important;
+  }
+
+  #observablehq-center {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #observablehq-main {
+    max-width: none !important;
+  }
+
+  .card,
+  .note,
+  .a-savoir,
+  .rangee-kpi,
+  figure,
+  svg {
+    break-inside: avoid;
+  }
+
+  .card {
+    box-shadow: none !important;
+  }
+
+  h2 {
+    break-after: avoid;
+  }
+}
