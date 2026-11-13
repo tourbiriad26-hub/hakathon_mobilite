@@ -1274,16 +1274,21 @@ a.tuile:hover {
     padding: 0 !important;
   }
 
+  /* Un peu plus petit qu'à l'écran : plus de contenu par page, moins de blancs. */
   #observablehq-main {
     max-width: none !important;
+    zoom: 0.82;
   }
 
-  .card,
+  /* Les grands blocs peuvent se couper entre deux pages (sinon ils laissent une page à moitié vide) ;
+     seuls les petits éléments restent d'un seul tenant. */
   .note,
   .a-savoir,
-  .rangee-kpi,
+  .kpi,
+  .fiche-ligne,
   figure,
-  svg {
+  svg,
+  tr {
     break-inside: avoid;
   }
 
@@ -1291,7 +1296,8 @@ a.tuile:hover {
     box-shadow: none !important;
   }
 
-  h2 {
+  h2,
+  .filtres {
     break-after: avoid;
   }
 }
