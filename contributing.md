@@ -10,7 +10,7 @@ Projet réalisé pour le **Hackathon Mobilités 2026 Spécial Dataviz'** (Île-d
 | Kris LOKOUN | Membre de l'équipe | |
 | Mohamed-sami MECHAIAKH | Membre de l'équipe | |
 | Arsene TOGNIFODE | Membre de l'équipe | |
-| Soriba TORE | Membre de l'équipe | |
+| Soriba TOURE | Membre de l'équipe | |
 
 ## Certificat d'authenticité de la contribution
 

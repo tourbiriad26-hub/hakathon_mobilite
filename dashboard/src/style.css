@@ -445,6 +445,27 @@ figure > div[class$="-ramp"],
   opacity: 0.75;
 }
 
+.barres-cliquables g[aria-label="dot"] circle,
+.nuage-cliquable g[aria-label="dot"] circle {
+  cursor: pointer;
+}
+
+.barres-cliquables g[aria-label="dot"] circle:hover {
+  opacity: 0.75;
+}
+
+.nuage-cliquable {
+  cursor: pointer;
+}
+
+.anneau path {
+  transition: opacity 0.12s ease;
+}
+
+.anneau path:hover {
+  opacity: 0.8;
+}
+
 /* Les barres « poussent » à l'affichage, les chiffres apparaissent en douceur */
 @keyframes pousse {
   from { transform: scaleX(0); }
@@ -1162,7 +1183,31 @@ a.tuile:hover {
   margin: 10px 0 4px 0;
 }
 
-.equipe span {
+.equipe .membre {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.equipe a.membre:hover {
+  color: #0a66c2;
+  border-color: #0a66c2;
+}
+
+.equipe .logo-linkedin {
+  flex: none;
+}
+
+.equipe-pied a.membre {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: #0a66c2;
+  text-underline-offset: 2px;
+}
+
+.equipe .membre {
   font-size: 14px;
   font-weight: 600;
   color: var(--idfm-encre);

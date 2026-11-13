@@ -128,7 +128,9 @@ export function etiquettesCarte(lignes, {texte, taille = 11} = {}) {
 //   partie    : {valeur, libelle, libelleReste} pour montrer une partie du total dans la barre
 //               (ex. les embauches jugées difficiles parmi toutes les embauches prévues) :
 //               la partie est en rouge, le reste en bleu clair, avec une légende au-dessus.
-export function barresClassees(donnees, {valeur, nom, etiquette, width, couleur = IDFM.bleu, max = 10, margeGauche = 180, margeDroite = 90, longueurNom = 60, infobulle, surClic, partie} = {}) {
+//   forme     : "barre" (par défaut) ou "sucette" (une tige fine terminée par un rond)
+export function barresClassees(donnees, {valeur, nom, etiquette, width, couleur = IDFM.bleu, max = 10, margeGauche = 180, margeDroite = 90, longueurNom = 60, infobulle, surClic, partie, forme = "barre"} = {}) {
+  const sucette = forme === "sucette" && !partie;
   const lignes = Array.from(donnees)
     .filter((d) => d[valeur] != null && Number.isFinite(d[valeur]))
     .sort((a, b) => d3.descending(a[valeur], b[valeur]))
@@ -158,17 +160,163 @@ export function barresClassees(donnees, {valeur, nom, etiquette, width, couleur 
     marks: [
       // L'axe est un calque à part : c'est lui qui sait passer les libellés longs à la ligne (lineWidth en em).
       Plot.axisY({label: null, tickSize: 0, tickFormat: libelle, lineHeight: 1.15, fontSize: POLICE}),
-      Plot.barX(lignes, {x: valeur, y: nom, fill: partie ? () => partie.libelleReste : couleur, insetTop: 6, insetBottom: 6, title: infobulle ?? ((d) => `${d[nom]}\n${texte(d)}`), tip: true}),
+      ...(sucette
+        ? [
+            Plot.ruleY(lignes, {y: nom, x1: 0, x2: valeur, stroke: couleur, strokeWidth: 2.5, strokeOpacity: 0.55}),
+            Plot.dot(lignes, {x: valeur, y: nom, r: 8, fill: couleur, stroke: "white", strokeWidth: 2, title: infobulle ?? ((d) => `${d[nom]}\n${texte(d)}`), tip: true})
+          ]
+        : [Plot.barX(lignes, {x: valeur, y: nom, fill: partie ? () => partie.libelleReste : couleur, insetTop: 6, insetBottom: 6, title: infobulle ?? ((d) => `${d[nom]}\n${texte(d)}`), tip: true})]),
       ...(partie ? [Plot.barX(lignes, {x: (d) => d[partie.valeur] ?? 0, y: nom, fill: () => partie.libelle, insetTop: 6, insetBottom: 6, pointerEvents: "none"})] : []),
-      Plot.text(lignes, {x: valeur, y: nom, text: texte, dx: 6, textAnchor: "start", fill: IDFM.encre, fontWeight: 600})
+      Plot.text(lignes, {x: valeur, y: nom, text: texte, dx: sucette ? 14 : 6, textAnchor: "start", fill: IDFM.encre, fontWeight: 600})
     ]
   });
   if (surClic) {
-    const barres = plot.querySelector('g[aria-label="bar"]')?.querySelectorAll("rect") ?? [];
+    const barres = sucette
+      ? plot.querySelector('g[aria-label="dot"]')?.querySelectorAll("circle") ?? []
+      : plot.querySelector('g[aria-label="bar"]')?.querySelectorAll("rect") ?? [];
     if (barres.length === lignes.length) {
       barres.forEach((barre, i) => barre.addEventListener("click", () => surClic(lignes[i])));
       plot.classList.add("barres-cliquables");
     }
+  }
+  return plot;
+}
+
+// Couleurs fixes des moyens de transport, pour qu'un mode ait la même couleur partout sur le site.
+export const couleursModes = {
+  "Transports en commun": IDFM.bleu,
+  "Voiture": IDFM.encre,
+  "Marche à pied": "#67a4e6",
+  "Vélo": "#b3d2f3",
+  "Deux-roues motorisé": IDFM.grisClair
+};
+const PALETTE = [IDFM.bleu, IDFM.encre, "#67a4e6", "#b3d2f3", IDFM.grisClair, "#01458d", "#7d8794"];
+
+// Graphique en anneau : la part de chaque élément dans un total.
+//   valeur, nom : colonnes numérique et libellé ; etiquette : (ligne) => texte de la légende
+//   centre, sousCentre : grand chiffre et petite phrase écrits au milieu de l'anneau
+// La légende (nom + pourcentage) est à droite, ou en dessous sur un petit écran.
+export function anneau(donnees, {valeur, nom, width, etiquette, centre, sousCentre, couleur} = {}) {
+  const lignes = Array.from(donnees)
+    .filter((d) => d[valeur] != null && Number.isFinite(d[valeur]) && d[valeur] > 0)
+    .sort((a, b) => d3.descending(a[valeur], b[valeur]));
+  const total = d3.sum(lignes, (d) => d[valeur]);
+  const texte = etiquette ?? ((d) => `${Math.round((100 * d[valeur]) / total)} %`);
+  // Couleur de chaque part : celle du mode de transport si elle existe, sinon la suivante de la palette.
+  const prises = new Set();
+  const couleurs = lignes.map((d) => {
+    const c = (typeof couleur === "function" ? couleur(d) : null) ?? couleursModes[d[nom]];
+    if (c) { prises.add(c); return c; }
+    return null;
+  }).map((c) => c ?? PALETTE.find((p) => !prises.has(p) && prises.add(p)) ?? IDFM.grisClair);
+
+  const empile = width < 480;
+  const taille = Math.round(Math.min(empile ? width * 0.75 : width * 0.42, 250));
+  const rayon = taille / 2;
+  const hLigne = 32;
+  const hLegende = lignes.length * hLigne;
+  const xLegende = empile ? 0 : taille + 32;
+  const largeurLegende = Math.min(380, width - xLegende);
+  const hauteur = empile ? taille + 20 + hLegende : Math.max(taille, hLegende) + 4;
+
+  const svg = d3.create("svg")
+    .attr("class", "anneau")
+    .attr("width", width).attr("height", hauteur)
+    .attr("viewBox", [0, 0, width, hauteur])
+    .style("max-width", "100%").style("height", "auto")
+    .style("font-size", `${POLICE}px`).style("font-family", "inherit");
+
+  const arc = d3.arc().innerRadius(rayon * 0.62).outerRadius(rayon - 2).padAngle(0.014).cornerRadius(3);
+  const parts = d3.pie().value((d) => d[valeur]).sort(null)(lignes);
+  const g = svg.append("g").attr("transform", `translate(${empile ? width / 2 : rayon},${empile ? rayon : hauteur / 2})`);
+  g.selectAll("path").data(parts).join("path")
+    .attr("d", arc)
+    .attr("fill", (_, i) => couleurs[i])
+    .append("title").text((p) => `${p.data[nom]} : ${texte(p.data)}`);
+  if (centre != null) {
+    const sous = [].concat(sousCentre ?? []);
+    g.append("text").attr("text-anchor", "middle").attr("dy", sous.length ? "-0.15em" : "0.35em")
+      .attr("font-size", Math.round(rayon * 0.3)).attr("font-weight", 800).attr("fill", IDFM.encre).text(centre);
+    sous.forEach((ligne, i) => g.append("text").attr("text-anchor", "middle").attr("dy", `${1.5 + i * 1.2}em`)
+      .attr("font-size", 12).attr("fill", IDFM.gris).text(ligne));
+  }
+
+  const legende = svg.append("g").attr("transform", `translate(${xLegende},${empile ? taille + 20 : (hauteur - hLegende) / 2})`);
+  const item = legende.selectAll("g").data(lignes).join("g").attr("transform", (_, i) => `translate(0,${i * hLigne})`);
+  item.append("rect").attr("y", 6).attr("width", 14).attr("height", 14).attr("rx", 3).attr("fill", (_, i) => couleurs[i]);
+  item.append("text").attr("x", 24).attr("y", 18).attr("fill", IDFM.encre).text((d) => d[nom]);
+  item.append("text").attr("x", largeurLegende).attr("y", 18).attr("text-anchor", "end")
+    .attr("font-weight", 700).attr("fill", IDFM.encre).text(texte);
+  item.append("line").attr("x1", 0).attr("x2", largeurLegende).attr("y1", hLigne - 2).attr("y2", hLigne - 2)
+    .attr("stroke", IDFM.bordure);
+  return svg.node();
+}
+
+// Courbes reliant des groupes rangés dans l'ordre (par exemple du plus modeste au plus aisé).
+//   x : colonne du nom de groupe ; series : [{cle, libelle, couleur}] ; format : (valeur) => texte
+export function courbes(donnees, {x, series, width, format = (v) => v, hauteur = 340} = {}) {
+  const lignes = Array.from(donnees);
+  const points = series.flatMap((s) => lignes.filter((d) => d[s.cle] != null).map((d) => ({x: d[x], v: d[s.cle], serie: s.libelle})));
+  // Pour que les chiffres ne se chevauchent pas : au-dessus du point le plus haut, en dessous des autres.
+  const maxParGroupe = d3.rollup(points, (g) => d3.max(g, (p) => p.v), (p) => p.x);
+  const dessus = points.filter((p) => p.v === maxParGroupe.get(p.x));
+  const dessous = points.filter((p) => p.v !== maxParGroupe.get(p.x));
+  const etiquettes = (lignesTexte, dy) => Plot.text(lignesTexte, {x: "x", y: "v", text: (p) => format(p.v), dy, fill: IDFM.encre,
+    fontWeight: 700, stroke: "white", strokeWidth: 4, paintOrder: "stroke"});
+  return Plot.plot({
+    width,
+    height: hauteur,
+    marginLeft: 24,
+    marginRight: 24,
+    marginTop: 34,
+    marginBottom: 48,
+    style: {fontSize: `${POLICE}px`},
+    x: {type: "point", domain: lignes.map((d) => d[x]), label: null, padding: 0.35, tickSize: 0, tickPadding: 14,
+      tickFormat: (s) => couperLignes(s, width < 600 ? 9 : 16)},
+    y: {axis: null, domain: [0, (d3.max(points, (p) => p.v) ?? 1) * 1.18]},
+    color: {domain: series.map((s) => s.libelle), range: series.map((s) => s.couleur), legend: true},
+    marks: [
+      Plot.ruleY([0], {stroke: IDFM.bordure}),
+      Plot.ruleX(lignes, {x, stroke: IDFM.bordure, strokeDasharray: "2,4"}),
+      Plot.line(points, {x: "x", y: "v", stroke: "serie", strokeWidth: 3.5, curve: "monotone-x"}),
+      Plot.dot(points, {x: "x", y: "v", fill: "serie", r: 7, stroke: "white", strokeWidth: 2, tip: true,
+        title: (p) => `${p.x}\n${p.serie} : ${format(p.v)}`}),
+      etiquettes(dessus, -18),
+      etiquettes(dessous, 20)
+    ]
+  });
+}
+
+// Nuage de points : chaque rond est un territoire, placé selon deux indicateurs.
+//   x, y : colonnes ; r : colonne qui fixe la taille du rond ; nom : colonne du libellé
+//   choisi : ligne à mettre en avant (rond foncé, nom écrit) ; surClic : (ligne) => ...
+export function nuage(donnees, {x, y, r, nom, width, labelX, labelY, formatX = nombreFr, formatY = nombreFr, infobulle, choisi, surClic} = {}) {
+  const lignes = Array.from(donnees).filter((d) => d[x] != null && d[y] != null);
+  const plot = Plot.plot({
+    width,
+    height: Math.min(520, Math.max(340, width * 0.55)),
+    marginLeft: 52,
+    marginBottom: 46,
+    marginTop: 24,
+    marginRight: 20,
+    style: {fontSize: `${POLICE}px`},
+    x: {label: labelX, labelAnchor: "center", labelArrow: "none", tickFormat: formatX, grid: true, nice: true, ticks: Math.max(3, Math.floor(width / 130))},
+    y: {label: labelY, labelArrow: "none", tickFormat: formatY, grid: true, nice: true},
+    r: {range: [3, 20]},
+    marks: [
+      Plot.dot(lignes, {x, y, r, fill: IDFM.bleu, fillOpacity: 0.45, stroke: IDFM.bleu, strokeWidth: 1,
+        title: infobulle ?? ((d) => `${d[nom]}`), tip: true}),
+      Plot.linearRegressionY(lignes, {x, y, stroke: IDFM.rouge, strokeWidth: 2, strokeDasharray: "6,4", ci: 0}),
+      ...(choisi ? [
+        Plot.dot([choisi], {x, y, r: 9, fill: IDFM.encre, stroke: "white", strokeWidth: 2}),
+        Plot.text([choisi], {x, y, text: nom, dy: -18, fill: IDFM.encre, fontWeight: 700, stroke: "white", strokeWidth: 4, paintOrder: "stroke", lineWidth: 14})
+      ] : [])
+    ]
+  });
+  if (surClic) {
+    // Plot range les ronds du plus grand au plus petit : on passe par la valeur pointée (plot.value).
+    plot.addEventListener("click", () => { if (plot.value) surClic(plot.value); });
+    plot.classList.add("nuage-cliquable");
   }
   return plot;
 }

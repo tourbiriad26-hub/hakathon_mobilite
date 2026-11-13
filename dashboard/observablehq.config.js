@@ -12,8 +12,8 @@ const MENU = [
   {name: "Sources et méthode", path: "/sources"}
 ];
 
-// Membres de l'équipe, affichés en pied de page.
-const EQUIPE = "Taha Yassine TOURBI, Kris LOKOUN, Mohamed-sami MECHAIAKH, Arsene TOGNIFODE, Soriba TORE";
+// Membres de l'équipe et liens LinkedIn : voir src/components/equipe.js.
+import {equipeHtml} from "./src/components/equipe.js";
 
 // Police Raleway, celle du site d'Île-de-France Mobilités.
 const POLICE =
@@ -42,7 +42,6 @@ export default {
   pager: true,
   footer: () =>
     `Projet réalisé pour le Hackathon Mobilités 2026, défi 2 « mobilités et emploi ». Ce n'est pas un site officiel d'Île-de-France Mobilités. Données ouvertes : INSEE · Île-de-France Mobilités · Région Île-de-France · France Travail · DARES · Etalab / IGN (Licence Ouverte 2.0 et ODbL).<br>` +
-    `Équipe : ${EQUIPE}.<br>` +
-    `Site mis à jour chaque lundi · <a href="https://github.com/tourbiriad26-hub/hakathon_mobilite">code source</a>`,
+    `Équipe : <span class="equipe-pied">${equipeHtml({logo: false}).join(", ")}</span>.`,
   style: "style.css"
 };

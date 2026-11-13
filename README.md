@@ -1,6 +1,6 @@
 # Hackathon mobilité Paris — mobilité domicile-travail en Île-de-France
 
-**Équipe :** Taha Yassine TOURBI, Kris LOKOUN, Mohamed-sami MECHAIAKH, Arsene TOGNIFODE, Soriba TORE  
+**Équipe :** Taha Yassine TOURBI, Kris LOKOUN, Mohamed-sami MECHAIAKH, Arsene TOGNIFODE, Soriba TOURE  
 **Défi :** Défi 2 — Les mobilités et l'emploi  
 **Site :** https://tourbiriad26-hub.github.io/hakathon_mobilite/
 

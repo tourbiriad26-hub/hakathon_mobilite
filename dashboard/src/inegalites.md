@@ -13,7 +13,7 @@ const sql = DuckDBClient.sql(tablesCompletes({
 
 ```js
 import {fmtInt, fmtPct, fmtEur} from "./components/format.js";
-import {IDFM, barresClassees, barresModes} from "./components/graphiques.js";
+import {IDFM, barresClassees, barresModes, courbes, nuage} from "./components/graphiques.js";
 import {recherche} from "./components/filtres.js";
 import {selecteurTerritoires, valeursDe} from "./components/territoires.js";
 import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
@@ -158,10 +158,16 @@ const lignesGroupes = groupes.toArray().map((d) => ({
 <div class="card grid-colspan-2">
 
 ```js
-resize((width) => barresModes(lignesGroupes, {width, margeGauche: 130}))
+resize((width) => courbes(lignesGroupes, {
+  x: "nom", width, format: fmtPct,
+  series: [
+    {cle: "tc", libelle: "Transports en commun", couleur: IDFM.bleu},
+    {cle: "voiture", libelle: "Voiture", couleur: IDFM.encre}
+  ]
+}))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Les communes sont rangées selon le niveau de vie de leurs habitants, puis coupées en 5 groupes de même taille. Chaque barre représente 100 habitants qui se déplacent pour aller travailler : en bleu ceux qui prennent les transports en commun, en foncé ceux qui prennent la voiture. Paris, très bien desservie, fait partie du groupe « Aisées » : c'est pourquoi ce groupe utilise peu la voiture.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les communes sont rangées selon le niveau de vie de leurs habitants, de la plus modeste (à gauche) à la plus aisée (à droite), puis coupées en 5 groupes de même taille. Les deux courbes donnent, sur 100 habitants qui vont travailler, combien prennent les transports en commun (bleu) et combien prennent la voiture (foncé). Paris, très bien desservie, fait partie du groupe « Aisées » : c'est pourquoi ce groupe utilise peu la voiture.</div>
 
 </div>
 <div class="card">
@@ -260,6 +266,27 @@ resize((width) => barresClassees(visibles, {
 
 </div>
 
+## Plus on est aisé, moins on prend la voiture ?
+
+<div class="card">
+
+```js
+resize((width) => nuage(lignesEpci, {
+  x: "mediane", y: "part_voiture", r: "nb_actifs", nom: "libgeo", width,
+  labelX: "Niveau de vie médian des habitants (€ par an)",
+  labelY: "Vont travailler en voiture (%)",
+  formatX: (v) => `${Math.round(v / 1000)} 000 €`,
+  formatY: (v) => `${v} %`,
+  infobulle: (d) => `${d.libgeo}\nNiveau de vie médian : ${fmtEur(d.mediane)}\nEn voiture : ${fmtPct(d.part_voiture)}\nEn transports en commun : ${fmtPct(d.part_tc)}\nCliquez pour la choisir`,
+  choisi: E,
+  surClic: (d) => { choisirEpci(d.codegeo); selecteur.choisir("EPCI", d.codegeo); }
+}))
+```
+
+<div class="note"><b>Comment lire ce graphique.</b> Chaque rond est une intercommunalité : plus il est à droite, plus ses habitants sont aisés ; plus il est haut, plus ils vont travailler en voiture. La taille du rond dépend du nombre d'habitants ayant un emploi. La ligne rouge en pointillés montre la tendance générale. L'intercommunalité recherchée est en foncé. Cliquez sur un rond pour la choisir.</div>
+
+</div>
+
 ## Où le chômage est-il le plus fort ?
 
 ```sql id=chomage
@@ -278,11 +305,11 @@ ORDER BY f.nombre DESC
 resize((width) => barresClassees(chomage, {
   valeur: "taux_chomage", nom: "libgeo", width,
   etiquette: (d) => fmtPct(d.taux_chomage),
-  max: 15, margeGauche: 190, margeDroite: 70
+  max: 15, margeGauche: 190, margeDroite: 70, forme: "sucette"
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes qui travaillent ou cherchent un emploi, le nombre de celles qui sont au chômage, dans chaque zone d'emploi. La zone la plus touchée est en haut.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes qui travaillent ou cherchent un emploi, le nombre de celles qui sont au chômage, dans chaque zone d'emploi. Plus le rond est à droite, plus le chômage est fort. La zone la plus touchée est en haut.</div>
 
 </div>
 

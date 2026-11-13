@@ -13,7 +13,7 @@ const sql = DuckDBClient.sql(tablesCompletes({
 
 ```js
 import {fmtPct, fmtCompact, indexBy} from "./components/format.js";
-import {IDFM, barresClassees} from "./components/graphiques.js";
+import {anneau} from "./components/graphiques.js";
 import {recherche} from "./components/filtres.js";
 import {memoriserTerritoire} from "./components/territoires.js";
 import {lexique} from "./components/lexique.js";
@@ -77,15 +77,15 @@ const modesRegion = [
 ```
 
 ```js
-resize((width) => barresClassees(modesRegion, {
+resize((width) => anneau(modesRegion, {
   valeur: "part", nom: "mode", width,
   etiquette: (d) => fmtPct(d.part),
-  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
-  margeGauche: 170, margeDroite: 70
+  centre: fmtPct(R.get("part_tc")),
+  sousCentre: ["en transports", "en commun"]
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un moyen de transport. Plus la barre est longue, plus il est utilisé. Le chiffre au bout de la barre est le nombre de personnes sur 100 qui l'utilisent pour aller travailler. Les transports en commun sont en bleu.</div>
+<div class="note"><b>Comment lire ce graphique.</b> L'anneau représente toutes les personnes qui se déplacent pour aller travailler. Chaque part de couleur est un moyen de transport : plus elle est grande, plus il est utilisé. La liste à droite donne le chiffre exact, sur 100 personnes.</div>
 
 </div>
 
@@ -105,7 +105,7 @@ resize((width) => barresClassees(modesRegion, {
 
 <div class="grid grid-cols-3">
   <div class="card etape"><div class="numero">1</div><h2>Choisissez</h2><p>En haut de chaque page, 4 filtres : le type de territoire, le territoire principal, et un territoire de comparaison. Votre choix est conservé d'une page à l'autre.</p></div>
-  <div class="card etape"><div class="numero">2</div><h2>Cliquez</h2><p>Les cartes et les barres sont cliquables. Un clic sur un territoire le choisit : la carte zoome dessus et tous les chiffres de la page se mettent à jour.</p></div>
+  <div class="card etape"><div class="numero">2</div><h2>Cliquez</h2><p>Les cartes et les graphiques sont cliquables. Un clic sur un territoire le choisit : la carte zoome dessus et tous les chiffres de la page se mettent à jour.</p></div>
   <div class="card etape"><div class="numero">3</div><h2>Lisez</h2><p>Sous chaque graphique, « Comment lire » explique ce qu'il montre. Les encadrés « À savoir » et le catalogue des données définissent chaque indicateur.</p></div>
 </div>
 
@@ -113,7 +113,13 @@ resize((width) => barresClassees(modesRegion, {
 
 Projet réalisé pour le Hackathon Mobilités 2026 d'Île-de-France Mobilités, défi 2 « Les mobilités et l'emploi ».
 
-<div class="equipe"><span>Taha Yassine TOURBI</span><span>Kris LOKOUN</span><span>Mohamed-sami MECHAIAKH</span><span>Arsene TOGNIFODE</span><span>Soriba TORE</span></div>
+```js
+import {equipeHtml} from "./components/equipe.js";
+const blocEquipe = document.createElement("div");
+blocEquipe.className = "equipe";
+blocEquipe.innerHTML = equipeHtml().join("");
+display(blocEquipe);
+```
 
 ## Lexique
 

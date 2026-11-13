@@ -211,12 +211,12 @@ resize((width) => barresClassees(lignesBassins, {
   valeur: mesure, nom: "libgeo", width,
   etiquette: (d) => fmtMesure(d[mesure]),
   couleur: (d) => (d.codegeo === codeBassin ? IDFM.encre : IDFM.bleu),
-  max: 10, margeGauche: Math.min(170, width * 0.42), margeDroite: 115,
+  max: 10, margeGauche: Math.min(170, width * 0.42), margeDroite: 115, forme: "sucette",
   surClic: (d) => selecteur.choisir("Bassin d'emploi", d.codegeo)
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Les 10 bassins où la valeur est la plus élevée. Le bassin choisi est en foncé. Cliquez sur une barre pour le choisir.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les 10 bassins où la valeur est la plus élevée : plus le rond est à droite, plus la valeur est forte. Le bassin choisi est en foncé. Cliquez sur un rond pour le choisir.</div>
 
 </div>
 </div>
@@ -261,12 +261,12 @@ resize((width) => barresClassees(dep, {
   valeur: "taux_chomage", nom: "libgeo", width,
   etiquette: (d) => fmtPct(d.taux_chomage),
   couleur: (d) => (d.codegeo === depT ? IDFM.encre : IDFM.bleu),
-  max: 8, margeGauche: 150, margeDroite: 70,
+  max: 8, margeGauche: 150, margeDroite: 70, forme: "sucette",
   surClic: (d) => selecteur.choisir("Département", d.codegeo)
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes qui travaillent ou cherchent un emploi, le nombre de celles qui sont au chômage. Le département du territoire principal est en foncé.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes qui travaillent ou cherchent un emploi, le nombre de celles qui sont au chômage. Le département du territoire principal est en foncé. Cliquez sur un rond pour le choisir.</div>
 
 </div>
 <div class="card">

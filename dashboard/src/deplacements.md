@@ -13,7 +13,7 @@ const sql = DuckDBClient.sql(tablesCompletes({
 
 ```js
 import {fmtInt, fmtPct, fmtEur, toFeatureCollection, indexBy} from "./components/format.js";
-import {IDFM, carte, echelleCarte, barresClassees, barresModes} from "./components/graphiques.js";
+import {IDFM, carte, echelleCarte, barresClassees, barresModes, anneau} from "./components/graphiques.js";
 import {selecteurTerritoires, communesDe, communesDuZoom, valeursDe, extraire, nomMaille} from "./components/territoires.js";
 import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
 import {recherche} from "./components/filtres.js";
@@ -81,15 +81,15 @@ const modesTerritoire = [
 ```
 
 ```js
-resize((width) => barresClassees(modesTerritoire, {
+resize((width) => anneau(modesTerritoire, {
   valeur: "part", nom: "mode", width,
   etiquette: (d) => fmtPct(d.part),
-  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
-  margeGauche: 180, margeDroite: 70
+  centre: fmtPct(P.get("part_tc")),
+  sousCentre: ["en transports", "en commun"]
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Chaque barre est un moyen de transport. Le chiffre au bout de la barre est le nombre de personnes sur 100 qui l'utilisent pour aller travailler. Les transports en commun sont en bleu.</div>
+<div class="note"><b>Comment lire ce graphique.</b> L'anneau représente toutes les personnes du territoire qui se déplacent pour aller travailler. Chaque part de couleur est un moyen de transport ; la liste donne le nombre de personnes sur 100 qui l'utilisent. Les transports en commun sont en bleu.</div>
 
 </div>
 <div class="card">
@@ -274,12 +274,12 @@ resize((width) => barresClassees(lignesClassement, {
   valeur: "nombre", nom: "libgeo", width,
   etiquette: (d) => fmtVal(d.nombre),
   couleur: (d) => (decoupage === T.maille && d.codegeo === T.codegeo ? IDFM.encre : IDFM.bleu),
-  max: 10, margeGauche: 200, margeDroite: 80,
+  max: 10, margeGauche: 200, margeDroite: 80, forme: "sucette",
   surClic: (d) => selecteur.choisir(decoupage, d.codegeo)
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Les 10 territoires où la valeur est la plus élevée, pour l'indicateur et le découpage choisis au-dessus de la carte. Cliquez sur une barre : le territoire devient le territoire principal.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les 10 territoires où la valeur est la plus élevée, pour l'indicateur et le découpage choisis au-dessus de la carte. Plus le rond est à droite, plus la valeur est forte. Cliquez sur un rond : le territoire devient le territoire principal.</div>
 
 </div>
 

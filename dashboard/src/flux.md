@@ -14,7 +14,7 @@ const sql = DuckDBClient.sql(tablesCompletes({
 
 ```js
 import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy} from "./components/format.js";
-import {IDFM, carte, echelleCarte, barresClassees} from "./components/graphiques.js";
+import {IDFM, carte, echelleCarte, barresClassees, anneau} from "./components/graphiques.js";
 import {selecteurTerritoires} from "./components/territoires.js";
 import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
 import {lexique} from "./components/lexique.js";
@@ -211,15 +211,15 @@ resize((width) => carte({
 ## Comment se déplacent ces ${fmtCompact(totalFlux)} personnes
 
 ```js
-resize((width) => barresClassees(lignesModes, {
+resize((width) => anneau(lignesModes, {
   valeur: "nb_actifs", nom: "mode", width,
   etiquette: (d) => `${fmtPct(100 * d.nb_actifs / totalModes)}`,
-  couleur: (d) => (d.mode === "Transports en commun" ? IDFM.bleu : IDFM.grisClair),
-  max: 6, margeGauche: 170, margeDroite: 70
+  centre: fmtCompact(totalModes),
+  sousCentre: ["personnes"]
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Sur 100 personnes concernées, le nombre de celles qui utilisent chaque moyen de transport. Les transports en commun sont en bleu.</div>
+<div class="note"><b>Comment lire ce graphique.</b> L'anneau représente toutes les personnes concernées. Chaque part de couleur est un moyen de transport ; la liste donne le nombre de personnes sur 100 qui l'utilisent. Les transports en commun sont en bleu.</div>
 
 </div>
 <div class="card">

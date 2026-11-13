@@ -321,11 +321,11 @@ const critereDep = view(Inputs.radio(new Map([["Nombre de gares", "gares"], ["Va
 resize((width) => barresClassees(parDep, {
   valeur: critereDep, nom: "departement", width,
   etiquette: (d) => (critereDep === "part_tc" ? fmtPct(d.part_tc) : critereDep === "validations" ? fmtCompact(d.validations) : fmtInt(d.gares)),
-  max: 8, margeGauche: 150, margeDroite: 90
+  max: 8, margeGauche: 150, margeDroite: 90, forme: "sucette"
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Les 8 départements classés selon le critère choisi juste au-dessus. Paris concentre les validations parce que beaucoup de voyageurs venus d'ailleurs y passent.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les 8 départements classés selon le critère choisi juste au-dessus : plus le rond est à droite, plus la valeur est forte. Paris concentre les validations parce que beaucoup de voyageurs venus d'ailleurs y passent.</div>
 
 </div>
 
