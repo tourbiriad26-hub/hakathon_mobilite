@@ -15,52 +15,31 @@ const sql = DuckDBClient.sql(tablesCompletes({
 ```js
 import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, indexBy} from "./components/format.js";
 import {IDFM, carte, echelleCarte, barresClassees} from "./components/graphiques.js";
-import {recherche} from "./components/filtres.js";
+import {selecteurTerritoires} from "./components/territoires.js";
+import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
 import {lexique} from "./components/lexique.js";
 import {piedSources} from "./components/sources.js";
 ```
 
 # D'où viennent les personnes qui travaillent ici ?
 
-Choisissez un territoire. La carte montre dans quelles communes habitent les personnes qui viennent y travailler,
-ou, dans l'autre sens, où vont travailler ses habitants. **Cliquez sur une commune de la carte** pour la choisir à son tour.
+Choisissez un territoire dans les filtres. La carte montre dans quelles communes habitent les personnes qui viennent
+y travailler, ou, dans l'autre sens, où vont travailler ses habitants. **Cliquez sur une commune de la carte** pour la choisir à son tour.
 
-```js
-// Territoire étudié, sous la forme « type|code ». Il change avec la liste, la recherche ou un clic sur la carte.
-const choix = Mutable("EPCI|200054781");
-const choisir = (valeur) => { choix.value = valeur; };
-```
-
-```sql id=territoires
-SELECT maille, codegeo, libgeo, lon, lat FROM dim_geo
-WHERE maille IN ('Bassin d''emploi', 'EPCI', 'Département', 'Commune')
-ORDER BY CASE maille WHEN 'Département' THEN 1 WHEN 'Bassin d''emploi' THEN 2 WHEN 'EPCI' THEN 3 ELSE 4 END, libgeo
+```sql id=listeGeo
+SELECT maille, codegeo, libgeo, departement, epci, zone_emploi, bassin_emploi, region, lon, lat FROM dim_geo
 ```
 
 ```js
-const lignesTerritoires = territoires.toArray();
-const nomType = new Map([["Département", "département"], ["Bassin d'emploi", "bassin d'emploi"], ["EPCI", "intercommunalité"], ["Commune", "commune"]]);
-const libelleTerritoire = (d) => `${d.libgeo} (${nomType.get(d.maille)})`;
-// Liste courte (départements, bassins, intercommunalités) et recherche complète (communes comprises).
-const optionsListe = new Map([["— choisir dans la liste —", ""], ...lignesTerritoires.filter((d) => d.maille !== "Commune").map((d) => [libelleTerritoire(d), `${d.maille}|${d.codegeo}`])]);
-const optionsRecherche = new Map(lignesTerritoires.map((d) => [libelleTerritoire(d), `${d.maille}|${d.codegeo}`]));
-```
-
-<div class="filtres">
-
-```js
-const listeTerritoires = Inputs.select(optionsListe, {label: "Territoire", value: [...optionsListe.values()].includes(choix) ? choix : ""});
-listeTerritoires.addEventListener("input", () => { if (listeTerritoires.value) choisir(listeTerritoires.value); });
-display(listeTerritoires);
+const geoLignes = listeGeo.toArray();
+const selecteur = selecteurTerritoires(geoLignes);
 ```
 
 ```js
-display(recherche(optionsRecherche, {
-  label: "Rechercher une commune ou un territoire",
-  placeholder: "Tapez un nom, par exemple Nanterre",
-  surChoix: choisir
-}));
+const T = view(selecteur);
 ```
+
+<div class="filtres filtres-carte">
 
 ```js
 const sens = view(Inputs.radio(new Map([["Qui vient y travailler ?", "entrant"], ["Où vont travailler ses habitants ?", "sortant"]]), {label: "Question", value: "entrant"}));
@@ -69,10 +48,11 @@ const sens = view(Inputs.radio(new Map([["Qui vient y travailler ?", "entrant"],
 </div>
 
 ```js
-const [mailleChoisie, codeChoisi] = choix.split("|");
-const terr = lignesTerritoires.find((d) => d.maille === mailleChoisie && d.codegeo === codeChoisi);
+const mailleChoisie = T.maille;
+const codeChoisi = T.codegeo;
+const terr = geoLignes.find((d) => d.maille === mailleChoisie && d.codegeo === codeChoisi);
 // Colonne de dim_geo (maille Commune) qui rattache une commune au territoire choisi
-const colonne = mailleChoisie === "EPCI" ? "epci" : mailleChoisie === "Département" ? "departement" : mailleChoisie === "Bassin d'emploi" ? "bassin_emploi" : "codegeo";
+const colonne = {"EPCI": "epci", "Département": "departement", "Bassin d'emploi": "bassin_emploi", "Zone d'emploi": "zone_emploi", "Région": "region"}[mailleChoisie] ?? "codegeo";
 ```
 
 ```sql id=flux
@@ -81,6 +61,8 @@ WITH cibles AS (
     AND ((${mailleChoisie} = 'EPCI' AND epci = ${codeChoisi})
       OR (${mailleChoisie} = 'Département' AND departement = ${codeChoisi})
       OR (${mailleChoisie} = 'Bassin d''emploi' AND bassin_emploi = ${codeChoisi})
+      OR (${mailleChoisie} = 'Zone d''emploi' AND zone_emploi = ${codeChoisi})
+      OR (${mailleChoisie} = 'Région' AND region = ${codeChoisi})
       OR (${mailleChoisie} = 'Commune' AND codegeo = ${codeChoisi}))
 ),
 f AS (
@@ -109,7 +91,26 @@ WITH cibles AS (
     AND ((${mailleChoisie} = 'EPCI' AND epci = ${codeChoisi})
       OR (${mailleChoisie} = 'Département' AND departement = ${codeChoisi})
       OR (${mailleChoisie} = 'Bassin d''emploi' AND bassin_emploi = ${codeChoisi})
+      OR (${mailleChoisie} = 'Zone d''emploi' AND zone_emploi = ${codeChoisi})
+      OR (${mailleChoisie} = 'Région' AND region = ${codeChoisi})
       OR (${mailleChoisie} = 'Commune' AND codegeo = ${codeChoisi}))
+)
+SELECT
+  SUM(CASE WHEN commune_residence IN (SELECT codegeo FROM cibles) AND commune_travail IN (SELECT codegeo FROM cibles) THEN nb_actifs END) AS internes,
+  SUM(CASE WHEN commune_travail IN (SELECT codegeo FROM cibles) AND commune_residence NOT IN (SELECT codegeo FROM cibles) THEN nb_actifs END) AS entrants,
+  SUM(CASE WHEN commune_residence IN (SELECT codegeo FROM cibles) AND commune_travail NOT IN (SELECT codegeo FROM cibles) THEN nb_actifs END) AS sortants
+FROM fact_flux
+```
+
+```sql id=interneComp
+WITH cibles AS (
+  SELECT codegeo FROM dim_geo WHERE maille = 'Commune'
+    AND ((${T.mailleComp} = 'EPCI' AND epci = ${T.codegeoComp})
+      OR (${T.mailleComp} = 'Département' AND departement = ${T.codegeoComp})
+      OR (${T.mailleComp} = 'Bassin d''emploi' AND bassin_emploi = ${T.codegeoComp})
+      OR (${T.mailleComp} = 'Zone d''emploi' AND zone_emploi = ${T.codegeoComp})
+      OR (${T.mailleComp} = 'Région' AND region = ${T.codegeoComp})
+      OR (${T.mailleComp} = 'Commune' AND codegeo = ${T.codegeoComp}))
 )
 SELECT
   SUM(CASE WHEN commune_residence IN (SELECT codegeo FROM cibles) AND commune_travail IN (SELECT codegeo FROM cibles) THEN nb_actifs END) AS internes,
@@ -124,6 +125,8 @@ WITH cibles AS (
     AND ((${mailleChoisie} = 'EPCI' AND epci = ${codeChoisi})
       OR (${mailleChoisie} = 'Département' AND departement = ${codeChoisi})
       OR (${mailleChoisie} = 'Bassin d''emploi' AND bassin_emploi = ${codeChoisi})
+      OR (${mailleChoisie} = 'Zone d''emploi' AND zone_emploi = ${codeChoisi})
+      OR (${mailleChoisie} = 'Région' AND region = ${codeChoisi})
       OR (${mailleChoisie} = 'Commune' AND codegeo = ${codeChoisi}))
 )
 SELECT m.mode_court AS mode, SUM(f.nb_actifs) AS nb_actifs
@@ -158,11 +161,17 @@ const totalModes = d3.sum(lignesModes, (d) => d.nb_actifs);
 const phrase = sens === "entrant" ? `Personnes venant travailler dans : ${terr?.libgeo ?? ""}` : `Lieu de travail des habitants de : ${terr?.libgeo ?? ""}`;
 ```
 
-<div class="grid grid-cols-3">
-  <div class="card kpi"><h2>Habitent et travaillent ici</h2><div class="big">${fmtCompact(I.internes)}</div><div class="muted">personnes, dans ${terr?.libgeo ?? ""}</div></div>
-  <div class="card kpi kpi--tc"><h2>Entrants</h2><div class="big">${fmtCompact(I.entrants)}</div><div class="muted">habitent ailleurs, travaillent ici</div></div>
-  <div class="card kpi"><h2>Sortants</h2><div class="big">${fmtCompact(I.sortants)}</div><div class="muted">habitent ici, travaillent ailleurs</div></div>
-</div>
+## Les chiffres du territoire
+
+```js
+display(rangeeKpi([
+  kpi("Habitent et travaillent ici", fmtCompact(I.internes), `personnes, dans ${T.libgeo}`),
+  kpi("Entrants", fmtCompact(I.entrants), "habitent ailleurs, travaillent ici", {accent: "bleu"}),
+  kpi("Sortants", fmtCompact(I.sortants), "habitent ici, travaillent ailleurs")
+]));
+```
+
+## La carte des trajets
 
 <div class="card">
 
@@ -179,7 +188,7 @@ resize((width) => carte({
     return (v ? `${f.properties.libgeo}\n${fmtInt(v.nb_actifs)} personnes\ndont ${fmtPct(v.part_tc)} en transports en commun` : `${f.properties.libgeo}\nmoins de quelques personnes`) + "\nCliquez pour choisir cette commune";
   },
   marques: [
-    Plot.geo(fcCibles, {fill: IDFM.encre, stroke: IDFM.encre, strokeWidth: 0.3}),
+    Plot.geo(fcCibles, mailleChoisie === "Région" ? {fill: IDFM.bleuPale, stroke: "white", strokeWidth: 0.3} : {fill: IDFM.encre, stroke: IDFM.encre, strokeWidth: 0.3}),
     Plot.arrow(principaux, {
       x1: (d) => (sens === "entrant" ? d.lon : terr.lon),
       y1: (d) => (sens === "entrant" ? d.lat : terr.lat),
@@ -188,7 +197,7 @@ resize((width) => carte({
       stroke: IDFM.rouge, strokeWidth: 2, strokeOpacity: 0.8, bend: 15, headLength: 8
     })
   ],
-  surClic: (p) => choisir(`Commune|${p.codegeo}`)
+  surClic: (p) => selecteur.choisir("Commune", p.codegeo)
 }))
 ```
 
@@ -222,7 +231,7 @@ resize((width) => barresClassees(lignesFlux, {
   valeur: "nb_actifs", nom: "libgeo", width,
   etiquette: (d) => `${fmtInt(d.nb_actifs)}`,
   max: 10, margeGauche: 170, margeDroite: 80,
-  surClic: (d) => choisir(`Commune|${d.commune}`)
+  surClic: (d) => selecteur.choisir("Commune", d.commune)
 }))
 ```
 
@@ -230,6 +239,32 @@ resize((width) => barresClassees(lignesFlux, {
 
 </div>
 </div>
+
+## Comparaison avec ${T.libgeoComp}
+
+<div class="card">
+
+```js
+const IC = interneComp.get(0);
+display(tableauComparaison(T.libgeo, T.libgeoComp, [
+  {libelle: "Habitent et travaillent dans le territoire", a: I.internes, b: IC.internes, format: fmtInt},
+  {libelle: "Entrants : habitent ailleurs, travaillent ici", a: I.entrants, b: IC.entrants, format: fmtInt},
+  {libelle: "Sortants : habitent ici, travaillent ailleurs", a: I.sortants, b: IC.sortants, format: fmtInt},
+  {libelle: "Entrants pour 100 sortants", a: I.sortants ? 100 * I.entrants / I.sortants : null, b: IC.sortants ? 100 * IC.entrants / IC.sortants : null, format: (v) => fmtInt(v)}
+]));
+```
+
+<div class="note"><b>Comment lire ce tableau.</b> Les mêmes chiffres pour le territoire principal et pour le territoire de comparaison choisis dans les filtres. La petite barre sous chaque chiffre montre lequel est le plus grand. Au-dessus de 100 « entrants pour 100 sortants », le territoire attire plus de travailleurs qu'il n'en envoie ailleurs.</div>
+
+</div>
+
+```js
+display(aSavoir(
+  "Un « entrant » habite hors du territoire et vient y travailler. Un « sortant » habite dans le territoire et travaille ailleurs.",
+  "Ces chiffres viennent d'un sondage du recensement auprès d'un habitant sur cinq : les petits nombres (quelques dizaines de personnes) sont approximatifs."
+));
+display(source("INSEE, recensement de la population 2022 (fichier « mobilités professionnelles ») ; contours : Etalab, IGN."));
+```
 
 ## Lexique
 

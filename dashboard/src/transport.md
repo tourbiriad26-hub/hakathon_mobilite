@@ -17,14 +17,35 @@ const sql = DuckDBClient.sql(tablesCompletes({
 import {fmtInt, fmtPct, fmtCompact, toFeatureCollection, nomsDep} from "./components/format.js";
 import {IDFM, carte, barresClassees} from "./components/graphiques.js";
 import {recherche} from "./components/filtres.js";
+import {selecteurTerritoires, communesDe, communesDuZoom, valeursDe, extraire} from "./components/territoires.js";
+import {kpi, rangeeKpi, tableauComparaison, aSavoir, source} from "./components/blocs.js";
 import {lexique} from "./components/lexique.js";
 import {piedSources} from "./components/sources.js";
 ```
 
 # Où sont les gares, et lesquelles sont les plus fréquentées ?
 
-Toutes les gares et stations de métro, RER, train et tramway d'Île-de-France, avec leur fréquentation sur 12 mois.
-**Cherchez une gare par son nom** ou cliquez sur une barre du classement pour la repérer sur la carte.
+Les gares et stations de métro, RER, train et tramway du territoire choisi, avec leur fréquentation sur 12 mois.
+**Cliquez sur une commune de la carte** pour la choisir, ou cherchez une gare par son nom.
+
+```sql id=listeGeo
+SELECT maille, codegeo, libgeo, departement, epci, zone_emploi, bassin_emploi, region FROM dim_geo
+```
+
+```js
+const geoLignes = listeGeo.toArray();
+const selecteur = selecteurTerritoires(geoLignes);
+```
+
+```js
+const T = view(selecteur);
+```
+
+```sql id=profil
+SELECT maille, codegeo, code_indicateur, nombre FROM fact_mobilite
+WHERE (maille = ${T.maille} AND codegeo = ${T.codegeo})
+   OR (maille = ${T.mailleComp} AND codegeo = ${T.codegeoComp})
+```
 
 ```js
 // Gare mise en avant sur la carte et dans la fiche (null = aucune).
@@ -32,7 +53,7 @@ const gareChoisie = Mutable(null);
 const choisirGare = (id) => { gareChoisie.value = id; };
 ```
 
-```sql id=kpi
+```sql id=chiffresReseau
 SELECT COUNT(*) AS nb_poles,
        SUM(nb_validations_12m) AS validations,
        COUNT(DISTINCT codegeo_commune) AS communes_desservies,
@@ -66,33 +87,48 @@ SELECT codegeo, libgeo, geojson FROM dim_geo WHERE maille = 'Département'
 ```
 
 ```js
-const K = kpi.get(0);
+const K = chiffresReseau.get(0);
 const S = sansGare.get(0);
 const fc = toFeatureCollection(communes);
 const fcDep = toFeatureCollection(departements);
 const toutesGares = gares.toArray();
 const optionsGares = new Map(toutesGares.map((d) => [`${d.nom_pole} (${d.commune ?? "hors Île-de-France"})`, d.id]));
-const zoomOptions = new Map([["Toute l'Île-de-France", ""], ...[...nomsDep].map(([code, nom]) => [nom, code])]);
 const nomsModes = new Map([["Métro", "METRO"], ["RER", "RER"], ["Train", "TRAIN"], ["Tramway", "TRAMWAY"]]);
 ```
 
-<div class="grid grid-cols-4">
-  <div class="card kpi kpi--tc"><h2>Gares et stations</h2><div class="big">${fmtInt(K.nb_poles)}</div><div class="muted">en Île-de-France</div></div>
-  <div class="card kpi"><h2>Validations en 12 mois</h2><div class="big">${fmtCompact(K.validations)}</div><div class="muted">passages de carte ou de ticket</div></div>
-  <div class="card kpi kpi--alerte"><h2>Communes sans gare</h2><div class="big">${fmtInt(S.sans_gare)} sur ${fmtInt(S.communes)}</div><div class="muted">${fmtPct(100 * S.actifs_sans_gare / S.actifs)} des habitants ayant un emploi y vivent</div></div>
-  <div class="card kpi"><h2>Communes avec une gare</h2><div class="big">${fmtInt(K.communes_desservies)}</div><div class="muted">au moins une gare ou station</div></div>
-</div>
+```js
+const lignesProfil = profil.toArray();
+const P = valeursDe(lignesProfil, T.maille, T.codegeo);
+const C = valeursDe(lignesProfil, T.mailleComp, T.codegeoComp);
+// Communes et gares du territoire principal.
+const codesT = communesDe(geoLignes, T.maille, T.codegeo);
+const garesT = toutesGares.filter((d) => codesT.has(d.codegeo_commune));
+const communesAvecGare = new Set(garesT.map((d) => d.codegeo_commune));
+const validationsT = d3.sum(garesT, (d) => d.nb_validations_12m ?? 0);
+const parActif = (v, actifs) => (v == null || !actifs ? null : v / actifs);
+```
+
+## Les gares du territoire
+
+```js
+display(rangeeKpi([
+  kpi("Gares et stations", fmtInt(garesT.length), `${T.libgeo} · ${fmtInt(K.nb_poles)} en Île-de-France`, {accent: "bleu"}),
+  kpi("Validations en 12 mois", validationsT ? fmtCompact(validationsT) : "–", "passages de carte ou de ticket dans ces gares"),
+  kpi("Communes sans gare", `${fmtInt(codesT.size - communesAvecGare.size)} sur ${fmtInt(codesT.size)}`, `dans ${T.libgeo}`, {accent: "alerte"}),
+  kpi("Vont travailler en transports en commun", fmtPct(P.get("part_tc")), "des habitants ayant un emploi")
+]));
+```
 
 ## La carte des gares
 
-<div class="filtres">
+<div class="filtres filtres-carte">
 
 ```js
 const modesChoisis = view(Inputs.checkbox(nomsModes, {label: "Type de transport", value: [...nomsModes.values()]}));
 ```
 
 ```js
-const zoomCode = view(Inputs.select(zoomOptions, {label: "Zoom sur", value: ""}));
+const vue = view(Inputs.radio(new Map([["Zoom sur le territoire", "territoire"], ["Toute la région", "region"]]), {label: "Vue", value: "territoire"}));
 ```
 
 ```js
@@ -106,7 +142,11 @@ display(recherche(optionsGares, {
 </div>
 
 ```js
-const garesVisibles = toutesGares.filter((d) => modesChoisis.some((m) => (d.modes ?? "").includes(m)) && (!zoomCode || d.departement === zoomCode));
+const garesVisibles = toutesGares.filter((d) => modesChoisis.some((m) => (d.modes ?? "").includes(m)));
+// Zone sur laquelle cadrer la carte, et gares du territoire parmi celles affichées.
+const cadre = extraire(fc, communesDuZoom(geoLignes, T.maille, T.codegeo));
+const zoomCarte = vue === "territoire" && cadre.features.length ? cadre : null;
+const garesClassement = garesVisibles.filter((d) => d.nb_validations_12m && (T.maille === "Région" || codesT.has(d.codegeo_commune)));
 const codesDesservis = new Set(garesVisibles.map((d) => d.codegeo_commune).filter(Boolean));
 const fcDesservies = {type: "FeatureCollection", features: fc.features.filter((f) => codesDesservis.has(f.properties.codegeo))};
 const G = toutesGares.find((d) => d.id === gareChoisie);
@@ -119,8 +159,10 @@ const rang = G ? toutesGares.indexOf(G) + 1 : null;
 ```js
 resize((width) => carte({
   fc, fcDep, width,
-  zoom: zoomCode ? fcDep.features.find((f) => f.properties.codegeo === zoomCode) : null,
-  echelles: {r: {range: [1.5, 18]}},
+  zoom: zoomCarte,
+  selection: codesT.size <= 40 ? codesT : null,
+  surClic: (p) => selecteur.choisir("Commune", p.codegeo),
+  echelles: {r: {range: zoomCarte ? [3, 26] : [1.5, 18]}},
   marques: [
     Plot.geo(fcDesservies, {fill: IDFM.bleuPale, stroke: "white", strokeWidth: 0.3}),
     Plot.geo(fcDep, {stroke: IDFM.gris, strokeWidth: 0.8, fill: "none"}),
@@ -129,6 +171,11 @@ resize((width) => carte({
       fill: IDFM.bleu, fillOpacity: 0.55, stroke: "white", strokeWidth: 0.5, tip: true,
       title: (d) => `${d.nom_pole}\n${d.commune ?? "hors Île-de-France"}\n${d.nb_validations_12m ? fmtInt(d.nb_validations_12m) + " validations en 12 mois" : "fréquentation non publiée"}`
     }),
+    // En vue zoomée, le nom des gares les plus fréquentées du territoire est écrit sur la carte.
+    ...(zoomCarte ? [Plot.text(garesClassement.slice(0, 14), {
+      x: "lon", y: "lat", text: "nom_pole", dy: -12, fontSize: 11, fontWeight: 600, lineWidth: 10,
+      fill: IDFM.encre, stroke: "white", strokeWidth: 3, paintOrder: "stroke", pointerEvents: "none"
+    })] : []),
     ...(G ? [
       Plot.dot([G], {x: "lon", y: "lat", r: 9, fill: "none", stroke: IDFM.rouge, strokeWidth: 3}),
       Plot.text([G], {x: "lon", y: "lat", text: "nom_pole", dy: -16, fill: IDFM.encre, stroke: "white", strokeWidth: 4, fontWeight: 700, fontSize: 13})
@@ -164,10 +211,10 @@ display(G
 <div class="grid grid-cols-2">
 <div class="card">
 
-## Les 10 gares les plus fréquentées
+## Les gares les plus fréquentées : ${T.libgeo}
 
 ```js
-resize((width) => barresClassees(garesVisibles.filter((d) => d.nb_validations_12m), {
+resize((width) => barresClassees(garesClassement, {
   valeur: "nb_validations_12m", nom: "nom_pole", width,
   etiquette: (d) => `${fmtCompact(d.nb_validations_12m)} validations`,
   couleur: (d) => (d.id === gareChoisie ? IDFM.encre : IDFM.bleu),
@@ -176,7 +223,7 @@ resize((width) => barresClassees(garesVisibles.filter((d) => d.nb_validations_12
 }))
 ```
 
-<div class="note"><b>Comment lire ce graphique.</b> Les 10 gares qui comptent le plus de validations en 12 mois, parmi celles affichées sur la carte (les filtres s'appliquent). « M » signifie million. Cliquez sur une barre pour repérer la gare sur la carte.</div>
+<div class="note"><b>Comment lire ce graphique.</b> Les gares du territoire principal qui comptent le plus de validations en 12 mois (10 au plus), selon les types de transport cochés. « M » signifie million. Cliquez sur une barre pour repérer la gare sur la carte.</div>
 
 </div>
 <div class="card">
@@ -220,6 +267,32 @@ resize((width) => Plot.plot({
 
 </div>
 </div>
+
+## Comparaison avec ${T.libgeoComp}
+
+<div class="card">
+
+```js
+display(tableauComparaison(T.libgeo, T.libgeoComp, [
+  {libelle: "Gares et stations", a: P.get("nb_gares") ?? 0, b: C.get("nb_gares") ?? 0, format: fmtInt},
+  {libelle: "Validations en 12 mois", a: P.get("nb_validations_12m"), b: C.get("nb_validations_12m"), format: fmtCompact},
+  {libelle: "Validations par habitant ayant un emploi", a: parActif(P.get("nb_validations_12m"), P.get("nb_actifs_occupes")), b: parActif(C.get("nb_validations_12m"), C.get("nb_actifs_occupes")), format: (v) => fmtInt(v)},
+  {libelle: "Vont travailler en transports en commun", a: P.get("part_tc"), b: C.get("part_tc"), format: fmtPct},
+  {libelle: "Vont travailler en voiture", a: P.get("part_voiture"), b: C.get("part_voiture"), format: fmtPct}
+]));
+```
+
+<div class="note"><b>Comment lire ce tableau.</b> Les mêmes chiffres pour le territoire principal et pour le territoire de comparaison choisis dans les filtres. La petite barre sous chaque chiffre montre lequel est le plus grand.</div>
+
+</div>
+
+```js
+display(aSavoir(
+  "Une « validation » est un passage de carte ou de ticket devant une borne. Une personne qui valide à l'aller et au retour compte pour deux validations.",
+  "Les validations sont comptées dans la gare où elles ont lieu : un territoire qui accueille beaucoup d'emplois en compte beaucoup, même si ses habitants sont peu nombreux. La fréquentation n'est pas publiée pour environ une gare sur quatre, surtout des stations de tramway."
+));
+display(source("Île-de-France Mobilités, emplacement des gares et validations sur le réseau ferré ; INSEE, recensement de la population 2022."));
+```
 
 ## Par département
 

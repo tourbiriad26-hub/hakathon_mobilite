@@ -15,6 +15,7 @@ const sql = DuckDBClient.sql(tablesCompletes({
 import {fmtPct, fmtCompact, indexBy} from "./components/format.js";
 import {IDFM, barresClassees} from "./components/graphiques.js";
 import {recherche} from "./components/filtres.js";
+import {memoriserTerritoire} from "./components/territoires.js";
 import {lexique} from "./components/lexique.js";
 import {piedSources} from "./components/sources.js";
 ```
@@ -44,11 +45,12 @@ const optionsCommunes = new Map(listeCommunes.toArray().map((d) => [`${d.libgeo}
 display(recherche(optionsCommunes, {
   label: "Votre commune",
   placeholder: "Tapez un nom, par exemple Montreuil",
-  surChoix: (code) => { location.href = `./deplacements?commune=${code}`; }
+  // La commune devient le territoire principal du site, puis on ouvre la page « Se déplacer ».
+  surChoix: (code) => { memoriserTerritoire("Commune", code); location.href = "./deplacements"; }
 }));
 ```
 
-<div class="muted">Choisissez un nom dans la liste : la fiche de la commune s'ouvre sur la carte.</div>
+<div class="muted">Choisissez un nom dans la liste : la commune devient le territoire principal de toutes les pages.</div>
 </div>
 
 ## Les chiffres à retenir
@@ -95,16 +97,23 @@ resize((width) => barresClassees(modesRegion, {
   <a class="card tuile" href="./flux"><h2>D'où viennent les travailleurs</h2><p>Choisissez un territoire : la carte montre d'où viennent les personnes qui y travaillent.</p><span>Voir les trajets →</span></a>
   <a class="card tuile" href="./inegalites"><h2>Revenus et transports</h2><p>Les communes modestes et les communes aisées n'utilisent pas les mêmes transports.</p><span>Comparer →</span></a>
   <a class="card tuile" href="./transport"><h2>Gares et stations</h2><p>Où sont les gares, lesquelles sont les plus fréquentées, quelles communes n'en ont pas.</p><span>Voir les gares →</span></a>
+  <a class="card tuile" href="./catalogue"><h2>Catalogue des données</h2><p>Tous les indicateurs du site : leur définition, leur source et les territoires pour lesquels ils existent.</p><span>Consulter →</span></a>
   <a class="card tuile" href="./sources"><h2>Sources et méthode</h2><p>D'où viennent les chiffres et comment ils sont calculés. Tout est public et vérifiable.</p><span>Lire →</span></a>
 </div>
 
 ## Comment utiliser le site
 
 <div class="grid grid-cols-3">
-  <div class="card etape"><div class="numero">1</div><h2>Choisissez</h2><p>Chaque page a une barre « Filtres » : un indicateur, un territoire, un zoom. Le champ de recherche trouve une commune ou une gare par son nom.</p></div>
-  <div class="card etape"><div class="numero">2</div><h2>Cliquez</h2><p>Les cartes et les barres sont cliquables. Un clic sur un territoire affiche sa fiche et met à jour les graphiques de la page.</p></div>
-  <div class="card etape"><div class="numero">3</div><h2>Lisez</h2><p>Sous chaque graphique, un encadré « Comment lire » explique ce qu'il montre. Le lexique en bas de page définit les mots utilisés.</p></div>
+  <div class="card etape"><div class="numero">1</div><h2>Choisissez</h2><p>En haut de chaque page, 4 filtres : le type de territoire, le territoire principal, et un territoire de comparaison. Votre choix est conservé d'une page à l'autre.</p></div>
+  <div class="card etape"><div class="numero">2</div><h2>Cliquez</h2><p>Les cartes et les barres sont cliquables. Un clic sur un territoire le choisit : la carte zoome dessus et tous les chiffres de la page se mettent à jour.</p></div>
+  <div class="card etape"><div class="numero">3</div><h2>Lisez</h2><p>Sous chaque graphique, « Comment lire » explique ce qu'il montre. Les encadrés « À savoir » et le catalogue des données définissent chaque indicateur.</p></div>
 </div>
+
+## L'équipe
+
+Projet réalisé pour le Hackathon Mobilités 2026 d'Île-de-France Mobilités, défi 2 « Les mobilités et l'emploi ».
+
+<div class="equipe"><span>Taha Yassine TOURBI</span><span>Kris LOKOUN</span><span>Mohamed-sami MECHAIAKH</span><span>Arsene TOGNIFODE</span><span>Soriba TORE</span></div>
 
 ## Lexique
 
