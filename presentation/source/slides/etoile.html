@@ -1,0 +1,17 @@
+<section id="etoile" class="pale">
+<div class="titre"><p class="surtitre">Étape 3 · Modéliser</p><h2>Un modèle en étoile autour des territoires</h2><p class="chapo">Toutes les tables se rejoignent par le couple (maille, code du territoire).</p></div>
+<div class="hote" style="height:600px">
+<!-- A 0,0,440,170  B 1224,0,440,170  C 632,220,400,160  D 0,430,440,170  E 1224,430,440,170 -->
+<div class="noeud" style="left:0px; top:0px; width:440px; height:170px"><p class="nom">fact_mobilite</p><p class="desc">19 398 lignes : territoire × indicateur × période</p></div>
+<div class="noeud" style="left:1224px; top:0px; width:440px; height:170px"><p class="nom">fact_flux</p><p class="desc">234 798 trajets : commune d’habitation × commune de travail × mode</p></div>
+<div class="noeud fort" style="left:632px; top:220px; width:400px; height:160px"><p class="nom">dim_geo</p><p class="desc">1 367 territoires, 6 mailles, contours</p></div>
+<div class="noeud" style="left:0px; top:430px; width:440px; height:170px"><p class="nom">fact_bmo</p><p class="desc">3 891 lignes : embauches prévues par bassin × métier</p></div>
+<div class="noeud" style="left:1224px; top:430px; width:440px; height:170px"><p class="nom">dim_gares + validations</p><p class="desc">999 gares, 2 927 lignes par trimestre, 365 jours</p></div>
+<x-connector class="lien" x1="440" y1="85" x2="732" y2="220" route="hv" head="none"></x-connector>
+<x-connector class="lien" x1="1224" y1="85" x2="932" y2="220" route="hv" head="none"></x-connector>
+<x-connector class="lien" x1="440" y1="515" x2="732" y2="380" route="hv" head="none"></x-connector>
+<x-connector class="lien" x1="1224" y1="515" x2="932" y2="380" route="hv" head="none"></x-connector>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>8 / 19</p></div>
+<aside>Le format long de fact_mobilite (une ligne par territoire et par indicateur) permet d’ajouter un indicateur sans changer le schéma : il suffit de l’ajouter au dictionnaire dim_indicateurs (28 indicateurs). C’est ce dictionnaire qui alimente la page « Catalogue des données ».</aside>
+</section>

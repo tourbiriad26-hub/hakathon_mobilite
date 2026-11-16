@@ -81,6 +81,8 @@ jobs:
           npm ci
           npm run build
           mkdir -p dist/dbt && cp target/static_index.html dist/dbt/index.html 2>/dev/null || cp ../target/static_index.html dist/dbt/index.html
+          # Le diaporama de présentation du projet, servi sous /presentation/
+          mkdir -p dist/presentation && cp ../presentation/index.html dist/presentation/index.html
 
       # Les navigateurs gardent les pages en cache 10 min : on garde aussi les fichiers de la version
       # en ligne, sinon une page en cache demande des fichiers de données supprimés (404).

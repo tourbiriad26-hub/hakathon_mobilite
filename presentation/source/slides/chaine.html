@@ -1,0 +1,19 @@
+<section id="chaine">
+<div class="titre"><p class="surtitre">La chaîne de traitement</p><h2>Six étapes, des fichiers bruts au site en ligne</h2></div>
+<div class="chaine grande">
+<div class="maillon"><p class="num">1</p><p class="nom">Collecter</p><p class="outil">14 jeux ouverts : INSEE, IDFM, France Travail…</p><div class="espace"></div><p class="dossier">seeds/</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">2</p><p class="nom">Ingérer</p><p class="outil">Python : télécharger, nettoyer, Parquet</p><div class="espace"></div><p class="dossier">scripts/</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">3</p><p class="nom">Modéliser</p><p class="outil">dbt + DuckDB : tables en étoile</p><div class="espace"></div><p class="dossier">models/</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">4</p><p class="nom">Contrôler</p><p class="outil">67 vérifications automatiques</p><div class="espace"></div><p class="dossier">tests/</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">5</p><p class="nom">Afficher</p><p class="outil">Observable : cartes et graphiques</p><div class="espace"></div><p class="dossier">dashboard/</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon fort"><p class="num">6</p><p class="nom">Publier</p><p class="outil">GitHub Actions et GitHub Pages</p><div class="espace"></div><p class="dossier">.github/</p></div>
+</div>
+<div class="bandeau"><p>Ce qui circule d’une étape à l’autre : fichiers CSV, Excel et API → 19 fichiers Parquet (17 Mo) → tables DuckDB → 10 fichiers Parquet pour le site (≈ 2 Mo) → pages web.</p></div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>4 / 19</p></div>
+<aside>Vue d’ensemble. En bas de chaque étape, le dossier du dépôt qui la contient : seeds/ pour le catalogue des sources, scripts/ pour l’ingestion, models/ pour dbt, tests/ pour les contrôles, dashboard/ pour le site, .github/ pour la publication. Les diapositives suivantes détaillent chaque étape.</aside>
+</section>

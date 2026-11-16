@@ -1,0 +1,18 @@
+<section id="dbt">
+<div class="titre"><p class="surtitre">Étape 3 · Modéliser</p><h2>dbt transforme les fichiers en tables prêtes à l’emploi</h2></div>
+<div class="chaine">
+<div class="maillon" style="width:300px"><p class="num">Entrée</p><p class="nom">19 Parquet</p><p class="outil">Lus tels quels par DuckDB</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon" style="width:300px"><p class="num">Staging</p><p class="nom">17 modèles</p><p class="outil">Un par source : renommer, typer, filtrer l’Île-de-France</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon" style="width:300px"><p class="num">Intermédiaire</p><p class="nom">1 modèle</p><p class="outil">Chaque actif rattaché à ses 6 territoires</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon fort" style="width:420px"><p class="num">Tables finales</p><p class="nom">3 dimensions + 5 faits</p><p class="outil">Le modèle en étoile lu par le site</p></div>
+</div>
+<div class="grille2">
+<div class="carte"><h3>4 référentiels maison (seeds)</h3><p class="texte">Liste des 28 indicateurs, codes des modes de transport, communes fusionnées, catalogue des sources.</p></div>
+<div class="carte"><h3>Deux moteurs, un seul code</h3><p class="texte">DuckDB en local et pendant la publication ; le même projet tourne sur PostgreSQL avec une option.</p><p class="outil">dbt-core · dbt-duckdb</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>7 / 19</p></div>
+<aside>dbt permet d’écrire chaque transformation en SQL, versionnée et testée. 26 modèles au total. Les paramètres (année du recensement, région, seuil de fiabilité) sont regroupés dans dbt_project.yml : changer de millésime se fait à un seul endroit.</aside>
+</section>

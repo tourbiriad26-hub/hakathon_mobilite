@@ -1,0 +1,18 @@
+<section id="site">
+<div class="titre"><p class="surtitre">Étape 5 · Afficher</p><h2>Un site statique : les calculs se font dans le navigateur</h2></div>
+<div class="chaine">
+<div class="maillon" style="width:350px"><p class="num">Serveur</p><p class="nom">GitHub Pages</p><p class="outil">8 pages web et 10 fichiers Parquet, rien d’autre</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon" style="width:350px"><p class="num">Navigateur</p><p class="nom">DuckDB-wasm</p><p class="outil">Charge les Parquet et exécute le SQL de chaque graphique</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon" style="width:350px"><p class="num">Navigateur</p><p class="nom">Observable Plot</p><p class="outil">Dessine les cartes, barres et courbes</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon fort" style="width:350px"><p class="num">Utilisateur</p><p class="nom">Filtre, clique</p><p class="outil">Nouvelle requête, en local, sans attente réseau</p></div>
+</div>
+<div class="grille2">
+<div class="carte"><h3>Pas de serveur à maintenir</h3><p class="texte">Aucune base de données en ligne, aucun coût d’hébergement : le site est une simple collection de fichiers.</p><p class="outil">Observable Framework</p></div>
+<div class="carte"><h3>Les pages s’écrivent en Markdown</h3><p class="texte">Texte, requêtes SQL et graphiques dans le même fichier : chaque page est lisible et modifiable par toute l’équipe.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>11 / 19</p></div>
+<aside>Observable Framework génère le site à partir de fichiers Markdown. Les requêtes SQL sont exécutées par DuckDB compilé en WebAssembly, directement dans le navigateur du visiteur.</aside>
+</section>

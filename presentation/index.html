@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aller travailler en Île-de-France — la démarche technique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@500..800&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<style>
+* { margin:0; }
+html, body { height:100%; background:#1B232C; overflow:hidden; }
+#scene { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; }
+#scene > section { position:absolute; left:0; top:0; width:1920px; height:1080px; overflow:hidden; display:none; }
+#scene > section.active { display:flex; }
+.forme { color:#7C8A9A; flex:none; }
+svg.connecteur { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+aside.notes { display:none; }
+body.voir-notes #scene > section.active aside.notes { display:block; position:absolute; left:0; right:0; bottom:0; padding:24px 128px; background:#25303BF2; color:#F2F6FB; font:24px/1.45 'Public Sans', Arial, sans-serif; }
+#aide { position:fixed; right:16px; bottom:12px; font:14px 'Public Sans', Arial, sans-serif; color:#AEB9C6; }
+@media print {
+  html, body { background:none; overflow:visible; height:auto; }
+  #scene { position:static; transform:none !important; width:auto; height:auto; }
+  #scene > section { position:relative; display:flex !important; page-break-after:always; break-after:page; }
+  #aide { display:none; }
+  @page { size:1920px 1080px; margin:0; }
+}
+/* Charte sobre, reprise du site : encre #25303B, bleu d'action #0268D5, fonds clairs. */
+section { box-sizing:border-box; padding:128px 128px 160px; background:#FAFAF7; color:#25303B; font-family:'Public Sans', Arial, sans-serif; display:flex; flex-direction:column; gap:32px; }
+section.pale { background:#F2F6FB; }
+section.sombre { background:#25303B; color:#F2F6FB; }
+h1 { font-family:'Raleway', Arial, sans-serif; font-size:88px; font-weight:800; line-height:1.05; color:#25303B; }
+h2 { font-family:'Raleway', Arial, sans-serif; font-size:56px; font-weight:700; line-height:1.1; color:#25303B; }
+h3 { font-family:'Raleway', Arial, sans-serif; font-size:32px; font-weight:700; line-height:1.2; color:#25303B; }
+p { font-size:28px; line-height:1.4; }
+.sombre h1, .sombre h2, .sombre h3 { color:#F2F6FB; }
+.titre { display:flex; flex-direction:column; gap:12px; }
+.surtitre { font-size:24px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#0268D5; }
+.sombre .surtitre { color:#8EC1F5; }
+.chapo { font-size:28px; color:#4E5864; }
+.sombre .chapo { color:#C9D3DF; }
+.pied { position:absolute; left:128px; bottom:64px; width:1664px; display:flex; justify-content:space-between; }
+.pied p { font-size:24px; color:#6B7684; }
+.sombre .pied p { color:#AEB9C6; }
+
+/* Cartes de texte */
+.grille2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.grille3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; }
+.rangee { display:flex; gap:24px; align-items:stretch; }
+.carte { box-sizing:border-box; background:#FDFDFB; border:2px solid #D5DEE9; border-radius:8px; padding:28px 32px; display:flex; flex-direction:column; gap:12px; flex:1; }
+.carte .texte { font-size:24px; line-height:1.45; color:#4E5864; }
+.carte .outil { font-size:24px; font-weight:700; color:#0268D5; }
+
+/* Chaîne d'étapes (schéma en ligne) */
+.chaine { display:flex; align-items:stretch; gap:12px; }
+.maillon { box-sizing:border-box; width:216px; background:#FDFDFB; border:2px solid #D5DEE9; border-radius:8px; padding:20px; display:flex; flex-direction:column; gap:10px; }
+.maillon.fort { background:#0268D5; border-color:#0268D5; }
+.maillon .num { font-size:24px; font-weight:700; color:#0268D5; }
+.maillon .nom { font-size:28px; font-weight:700; line-height:1.2; color:#25303B; }
+.maillon .outil { font-size:24px; line-height:1.35; color:#4E5864; }
+.maillon.fort .num, .maillon.fort .nom, .maillon.fort .outil { color:#FAFAF7; }
+.chaine.grande { flex:1; }
+.dossier { font-size:24px; font-weight:600; color:#0268D5; }
+.maillon.fort .dossier { color:#FAFAF7; }
+.espace { flex:1; }
+.fleche { width:40px; height:20px; background:#7C8A9A; align-self:center; }
+.bandeau { box-sizing:border-box; background:#E8F0FA; border-radius:8px; padding:20px 28px; }
+.bandeau p { font-size:24px; line-height:1.45; color:#25303B; }
+
+/* Schéma vertical (colonne d'étapes) */
+.pile { display:flex; flex-direction:column; gap:12px; width:620px; }
+.pile .maillon { width:620px; }
+.fleche-bas { width:20px; height:32px; background:#7C8A9A; align-self:center; }
+
+/* Schéma épinglé */
+.hote { position:relative; width:1664px; }
+.noeud { position:absolute; box-sizing:border-box; background:#FDFDFB; border:2px solid #D5DEE9; border-radius:8px; padding:18px 22px; display:flex; flex-direction:column; gap:6px; }
+.noeud .nom { font-size:28px; font-weight:700; color:#25303B; }
+.noeud .desc { font-size:24px; line-height:1.35; color:#4E5864; }
+.noeud.fort { background:#0268D5; border-color:#0268D5; }
+.noeud.fort .nom, .noeud.fort .desc { color:#FAFAF7; }
+.lien { color:#7C8A9A; border-width:3px; }
+
+/* Tableaux */
+table { width:100%; font-size:24px; color:#25303B; }
+th, td { padding:10px 14px; }
+tr.entete { background:#E8F0FA; }
+
+/* Chiffres */
+.chiffre { font-family:'Raleway', Arial, sans-serif; font-size:56px; font-weight:800; line-height:1.15; color:#0268D5; }
+.sombre .chiffre { color:#8EC1F5; }
+.sombre .carte { background:#2F3B48; border-color:#3E4C5B; }
+.sombre .carte .texte { color:#D5DDE6; }
+
+/* Couverture */
+.couv { justify-content:center; padding:128px; gap:40px; }
+.couv .chapo { font-size:32px; color:#C9D3DF; }
+.equipe-ligne { font-size:28px; color:#F2F6FB; }
+.lien-site { font-size:28px; font-weight:600; color:#8EC1F5; }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="tete" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#7C8A9A"/></marker></defs></svg>
+<div id="scene">
+<section id="couverture" class="sombre couv">
+<p class="surtitre">Hackaviz Mobilités 2026 · Défi 2 — Les mobilités et l’emploi</p>
+<h1>Aller travailler<br>en Île-de-France</h1>
+<p class="chapo">De 14 jeux de données ouverts à un site interactif : la démarche, étape par étape.</p>
+<p class="equipe-ligne">Équipe YSSAK — Taha Yassine Tourbi, Kris Lokoun, Mohamed-Sami Mechaiakh, Arsène Tognifode, Soriba Touré</p>
+<p class="lien-site">tourbiriad26-hub.github.io/hakathon_mobilite</p>
+<aside class="notes">Présenter l’équipe et le défi 2. Annoncer le plan : la question, la chaîne technique étape par étape, le site, puis ce qu’on a appris.</aside>
+</section>
+<section id="question">
+<div class="titre"><p class="surtitre">Le sujet</p><h2>Notre question</h2></div>
+<div class="bandeau"><p style="font-size:32px; line-height:1.4">Comment les Franciliens vont-ils travailler, et l’accès à l’emploi est-il le même partout ? Là où les employeurs recrutent, peut-on y aller sans voiture ?</p></div>
+<div class="grille3">
+<div class="carte"><h3>Pour Île-de-France Mobilités et les collectivités</h3><p class="texte">Repérer les territoires où les emplois sont nombreux, difficiles à pourvoir et mal desservis.</p></div>
+<div class="carte"><h3>Pour les acteurs de l’emploi</h3><p class="texte">France Travail, missions locales : savoir comment on se rend au travail depuis une commune, et quels métiers y recrutent.</p></div>
+<div class="carte"><h3>Pour les habitants</h3><p class="texte">Taper le nom de sa commune et comprendre en quelques secondes comment ses voisins vont travailler.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>2 / 19</p></div>
+<aside class="notes">Le défi 2 pose deux questions : les transports permettent-ils d’accéder à l’emploi, et où faudrait-il d’autres solutions ? Notre angle : croiser les trajets domicile-travail, les embauches prévues et l’offre ferrée, territoire par territoire.</aside>
+</section>
+<section id="reponse" class="pale">
+<div class="titre"><p class="surtitre">Le sujet</p><h2>Ce que le site permet de voir</h2><p class="chapo">Un tableau de bord en ligne, gratuit, qui fonctionne dans le navigateur, sans compte ni installation.</p></div>
+<div class="grille2">
+<div class="carte"><h3>6 échelles géographiques</h3><p class="texte">Région, 8 départements, 52 intercommunalités, 25 bassins d’emploi, 15 zones d’emploi, 1 266 communes : 1 367 territoires au total.</p></div>
+<div class="carte"><h3>28 indicateurs</h3><p class="texte">Trajets domicile-travail, embauches prévues, chômage, demandeurs d’emploi, revenus, gares et fréquentation.</p></div>
+<div class="carte"><h3>Un territoire, un clic</h3><p class="texte">On choisit un territoire et un territoire de comparaison ; chiffres, cartes et graphiques se mettent à jour ensemble.</p></div>
+<div class="carte"><h3>Données à jour chaque semaine</h3><p class="texte">Le site se reconstruit seul chaque lundi : nouvelles validations, nouveaux chiffres du chômage.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>3 / 19</p></div>
+<aside class="notes">Montrer le site en direct si possible : choisir une commune, cliquer sur la carte, montrer la comparaison.</aside>
+</section>
+<section id="chaine">
+<div class="titre"><p class="surtitre">La chaîne de traitement</p><h2>Six étapes, des fichiers bruts au site en ligne</h2></div>
+<div class="chaine grande">
+<div class="maillon"><p class="num">1</p><p class="nom">Collecter</p><p class="outil">14 jeux ouverts : INSEE, IDFM, France Travail…</p><div class="espace"></div><p class="dossier">seeds/</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">2</p><p class="nom">Ingérer</p><p class="outil">Python : télécharger, nettoyer, Parquet</p><div class="espace"></div><p class="dossier">scripts/</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">3</p><p class="nom">Modéliser</p><p class="outil">dbt + DuckDB : tables en étoile</p><div class="espace"></div><p class="dossier">models/</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">4</p><p class="nom">Contrôler</p><p class="outil">67 vérifications automatiques</p><div class="espace"></div><p class="dossier">tests/</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">5</p><p class="nom">Afficher</p><p class="outil">Observable : cartes et graphiques</p><div class="espace"></div><p class="dossier">dashboard/</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon fort"><p class="num">6</p><p class="nom">Publier</p><p class="outil">GitHub Actions et GitHub Pages</p><div class="espace"></div><p class="dossier">.github/</p></div>
+</div>
+<div class="bandeau"><p>Ce qui circule d’une étape à l’autre : fichiers CSV, Excel et API → 19 fichiers Parquet (17 Mo) → tables DuckDB → 10 fichiers Parquet pour le site (≈ 2 Mo) → pages web.</p></div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>4 / 19</p></div>
+<aside class="notes">Vue d’ensemble. En bas de chaque étape, le dossier du dépôt qui la contient : seeds/ pour le catalogue des sources, scripts/ pour l’ingestion, models/ pour dbt, tests/ pour les contrôles, dashboard/ pour le site, .github/ pour la publication. Les diapositives suivantes détaillent chaque étape.</aside>
+</section>
+<section id="sources">
+<div class="titre"><p class="surtitre">Étape 1 · Collecter</p><h2>14 jeux de données ouverts, 7 producteurs</h2></div>
+<table><tr class="entete"><th style="width:17%">Producteur</th><th style="width:31%">Jeu de données</th><th style="width:34%">Ce qu’on en tire</th><th style="width:18%">Échelle</th></tr><tr><td>INSEE</td><td>Recensement 2022 (MOBPRO)</td><td>Mode de transport, lieu de travail</td><td>Commune</td></tr><tr><td>INSEE</td><td>Filosofi 2021</td><td>Niveau de vie, pauvreté</td><td>Commune</td></tr><tr><td>INSEE</td><td>Chômage localisé</td><td>Taux de chômage trimestriel</td><td>Zone d’emploi</td></tr><tr><td>INSEE</td><td>Code géographique 2025</td><td>Commune → interco., zone</td><td>Commune</td></tr><tr><td>France Travail</td><td>Besoins en main-d’œuvre 2026</td><td>Embauches prévues par métier</td><td>Bassin</td></tr><tr><td>DARES</td><td>Inscrits à France Travail</td><td>Demandeurs d’emploi</td><td>Zone d’emploi</td></tr><tr><td>IDFM</td><td>Emplacement des gares</td><td>999 gares et stations</td><td>Point</td></tr><tr><td>IDFM</td><td>Validations réseau ferré</td><td>Fréquentation sur 12 mois</td><td>Gare</td></tr><tr><td>IDFM</td><td>Référentiel des lignes</td><td>Lignes actives par mode</td><td>Région</td></tr><tr><td>Région IDF</td><td>Bassins d’emploi, SDRIF-E</td><td>Découpage des 25 bassins</td><td>Bassin</td></tr><tr><td>Etalab / IGN</td><td>Contours des communes</td><td>Fonds de carte</td><td>Commune</td></tr></table>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>5 / 19</p></div>
+<aside class="notes">Toutes les sources sont publiques (Licence Ouverte 2.0 ou ODbL). Le point dur : elles n’existent pas toutes à la même échelle. Les embauches sont publiées par bassin d’emploi, le chômage par zone d’emploi et département, les trajets par commune. Le modèle de données doit relier tout cela.</aside>
+</section>
+<section id="ingestion" class="pale">
+<div class="titre"><p class="surtitre">Étape 2 · Ingérer</p><h2>Un script Python télécharge et normalise chaque source</h2></div>
+<div class="rangee" style="gap:48px">
+<div class="pile">
+<div class="maillon"><p class="num">1</p><p class="nom">Télécharger</p><p class="outil">12 sources, 3 essais par fichier</p></div>
+<div class="fleche-bas forme" aria-hidden="true"><svg viewBox="0 0 20 32" preserveAspectRatio="none" width="100%" height="100%"><path d="M6 0 H14 V18 H20 L10 32 L0 18 H6 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">2</p><p class="nom">Garder une copie</p><p class="outil">data/raw : pas de re-téléchargement</p></div>
+<div class="fleche-bas forme" aria-hidden="true"><svg viewBox="0 0 20 32" preserveAspectRatio="none" width="100%" height="100%"><path d="M6 0 H14 V18 H20 L10 32 L0 18 H6 Z" fill="currentColor"/></svg></div>
+<div class="maillon fort"><p class="num">3</p><p class="nom">Écrire en Parquet</p><p class="outil">data/parquet : 19 fichiers, 17 Mo</p></div>
+</div>
+<div style="display:flex; flex-direction:column; gap:24px; flex:1">
+<div class="carte"><h3>Pourquoi Parquet ?</h3><p class="texte">Un format en colonnes, compressé et typé : plus léger que les CSV et les fichiers Excel d’origine, et lu directement par DuckDB.</p><p class="outil">scripts/ingest.py · pandas · DuckDB</p></div>
+<div class="carte"><h3>Et si une source tombe ?</h3><p class="texte">Le site de l’INSEE renvoie parfois des erreurs. Les fichiers Parquet sont versionnés dans le dépôt : la source en panne est sautée, la version précédente est réutilisée.</p></div>
+</div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>6 / 19</p></div>
+<aside class="notes">Aucune règle métier à cette étape : on lit les formats d’origine (Excel, ZIP, CSV, API ODS) et on écrit un Parquet propre. Les contours de communes sont simplifiés avec shapely pour alléger les cartes.</aside>
+</section>
+<section id="dbt">
+<div class="titre"><p class="surtitre">Étape 3 · Modéliser</p><h2>dbt transforme les fichiers en tables prêtes à l’emploi</h2></div>
+<div class="chaine">
+<div class="maillon" style="width:300px"><p class="num">Entrée</p><p class="nom">19 Parquet</p><p class="outil">Lus tels quels par DuckDB</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon" style="width:300px"><p class="num">Staging</p><p class="nom">17 modèles</p><p class="outil">Un par source : renommer, typer, filtrer l’Île-de-France</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon" style="width:300px"><p class="num">Intermédiaire</p><p class="nom">1 modèle</p><p class="outil">Chaque actif rattaché à ses 6 territoires</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon fort" style="width:420px"><p class="num">Tables finales</p><p class="nom">3 dimensions + 5 faits</p><p class="outil">Le modèle en étoile lu par le site</p></div>
+</div>
+<div class="grille2">
+<div class="carte"><h3>4 référentiels maison (seeds)</h3><p class="texte">Liste des 28 indicateurs, codes des modes de transport, communes fusionnées, catalogue des sources.</p></div>
+<div class="carte"><h3>Deux moteurs, un seul code</h3><p class="texte">DuckDB en local et pendant la publication ; le même projet tourne sur PostgreSQL avec une option.</p><p class="outil">dbt-core · dbt-duckdb</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>7 / 19</p></div>
+<aside class="notes">dbt permet d’écrire chaque transformation en SQL, versionnée et testée. 26 modèles au total. Les paramètres (année du recensement, région, seuil de fiabilité) sont regroupés dans dbt_project.yml : changer de millésime se fait à un seul endroit.</aside>
+</section>
+<section id="etoile" class="pale">
+<div class="titre"><p class="surtitre">Étape 3 · Modéliser</p><h2>Un modèle en étoile autour des territoires</h2><p class="chapo">Toutes les tables se rejoignent par le couple (maille, code du territoire).</p></div>
+<div class="hote" style="height:600px">
+
+<div class="noeud" style="left:0px; top:0px; width:440px; height:170px"><p class="nom">fact_mobilite</p><p class="desc">19 398 lignes : territoire × indicateur × période</p></div>
+<div class="noeud" style="left:1224px; top:0px; width:440px; height:170px"><p class="nom">fact_flux</p><p class="desc">234 798 trajets : commune d’habitation × commune de travail × mode</p></div>
+<div class="noeud fort" style="left:632px; top:220px; width:400px; height:160px"><p class="nom">dim_geo</p><p class="desc">1 367 territoires, 6 mailles, contours</p></div>
+<div class="noeud" style="left:0px; top:430px; width:440px; height:170px"><p class="nom">fact_bmo</p><p class="desc">3 891 lignes : embauches prévues par bassin × métier</p></div>
+<div class="noeud" style="left:1224px; top:430px; width:440px; height:170px"><p class="nom">dim_gares + validations</p><p class="desc">999 gares, 2 927 lignes par trimestre, 365 jours</p></div>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M440.0 85.0 H732.0 V220.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M1224.0 85.0 H932.0 V220.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M440.0 515.0 H732.0 V380.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M1224.0 515.0 H932.0 V380.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>8 / 19</p></div>
+<aside class="notes">Le format long de fact_mobilite (une ligne par territoire et par indicateur) permet d’ajouter un indicateur sans changer le schéma : il suffit de l’ajouter au dictionnaire dim_indicateurs (28 indicateurs). C’est ce dictionnaire qui alimente la page « Catalogue des données ».</aside>
+</section>
+<section id="regles">
+<div class="titre"><p class="surtitre">Étape 3 · Modéliser</p><h2>Quatre règles de calcul pour des chiffres justes</h2></div>
+<div class="grille2">
+<div class="carte"><h3>Les parts ne sont jamais moyennées</h3><p class="texte">À chaque échelle, une part (transports en commun, voiture…) est recalculée à partir des effectifs pondérés. Faire la moyenne des communes donnerait le même poids à un village et à Paris.</p></div>
+<div class="carte"><h3>Un seuil de fiabilité</h3><p class="texte">Le recensement est un sondage au 1/5 : une valeur calculée sur moins de 200 actifs est marquée peu fiable et grisée sur les cartes.</p></div>
+<div class="carte"><h3>Une géographie cohérente</h3><p class="texte">Arrondissements ramenés à leur commune, communes fusionnées recodées en 2025, chaque gare placée dans la commune qui contient son point, chaque commune dans son bassin d’emploi par intersection des contours.</p></div>
+<div class="carte"><h3>Le secret statistique respecté</h3><p class="texte">Les revenus et les embauches couverts par le secret ne sont pas remplacés : ils restent absents, et le site l’indique.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>9 / 19</p></div>
+<aside class="notes">Ces règles sont écrites une fois dans le SQL et s’appliquent à toutes les échelles grâce à une macro dbt qui boucle sur les 6 mailles.</aside>
+</section>
+<section id="qualite" class="pale">
+<div class="titre"><p class="surtitre">Étape 4 · Contrôler</p><h2>67 vérifications à chaque construction</h2></div>
+<div class="rangee" style="gap:48px">
+<div style="display:flex; flex-direction:column; gap:16px; width:420px">
+<p class="chiffre">67</p>
+<p class="chapo">contrôles dbt : 4 référentiels chargés, 26 tables construites, 37 tests passés. Un seul échec et rien n’est publié.</p>
+</div>
+<div style="flex:1">
+<table><tr class="entete"><th style="width:38%">Contrôle</th><th style="width:62%">Ce qu’il vérifie</th></tr><tr><td>Unicité</td><td>Un territoire et un indicateur n’apparaissent qu’une fois</td></tr><tr><td>Parts entre 0 et 100</td><td>Aucun pourcentage aberrant</td></tr><tr><td>Somme des modes = 100</td><td>Pour chaque territoire, à 0,1 point près</td></tr><tr><td>Rattachement des trajets</td><td>Chaque commune d’un trajet existe</td></tr><tr><td>Bassins France Travail</td><td>Les 25 bassins retrouvent leur bassin régional</td></tr><tr><td>Fichiers publiés</td><td>Chaque Parquet est complet et se relit en entier</td></tr></table>
+</div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>10 / 19</p></div>
+<aside class="notes">Les tests sont des requêtes SQL qui doivent renvoyer zéro ligne. Ils tournent aussi sur chaque proposition de modification (pull request), avant toute fusion dans la branche principale.</aside>
+</section>
+<section id="site">
+<div class="titre"><p class="surtitre">Étape 5 · Afficher</p><h2>Un site statique : les calculs se font dans le navigateur</h2></div>
+<div class="chaine">
+<div class="maillon" style="width:350px"><p class="num">Serveur</p><p class="nom">GitHub Pages</p><p class="outil">8 pages web et 10 fichiers Parquet, rien d’autre</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon" style="width:350px"><p class="num">Navigateur</p><p class="nom">DuckDB-wasm</p><p class="outil">Charge les Parquet et exécute le SQL de chaque graphique</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon" style="width:350px"><p class="num">Navigateur</p><p class="nom">Observable Plot</p><p class="outil">Dessine les cartes, barres et courbes</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon fort" style="width:350px"><p class="num">Utilisateur</p><p class="nom">Filtre, clique</p><p class="outil">Nouvelle requête, en local, sans attente réseau</p></div>
+</div>
+<div class="grille2">
+<div class="carte"><h3>Pas de serveur à maintenir</h3><p class="texte">Aucune base de données en ligne, aucun coût d’hébergement : le site est une simple collection de fichiers.</p><p class="outil">Observable Framework</p></div>
+<div class="carte"><h3>Les pages s’écrivent en Markdown</h3><p class="texte">Texte, requêtes SQL et graphiques dans le même fichier : chaque page est lisible et modifiable par toute l’équipe.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>11 / 19</p></div>
+<aside class="notes">Observable Framework génère le site à partir de fichiers Markdown. Les requêtes SQL sont exécutées par DuckDB compilé en WebAssembly, directement dans le navigateur du visiteur.</aside>
+</section>
+<section id="filtres" class="pale">
+<div class="titre"><p class="surtitre">Étape 5 · Afficher</p><h2>Quatre filtres communs à toutes les pages</h2></div>
+<div class="hote" style="height:400px">
+
+<div class="noeud" style="left:0px; top:0px; width:380px; height:110px"><p class="nom">Maille géographique</p><p class="desc">ex. commune</p></div>
+<div class="noeud" style="left:428px; top:0px; width:380px; height:110px"><p class="nom">Territoire principal</p><p class="desc">ex. Montreuil</p></div>
+<div class="noeud" style="left:856px; top:0px; width:380px; height:110px"><p class="nom">Maille de comparaison</p><p class="desc">ex. département</p></div>
+<div class="noeud" style="left:1284px; top:0px; width:380px; height:110px"><p class="nom">Territoire comparé</p><p class="desc">ex. Seine-Saint-Denis</p></div>
+<div class="noeud fort" style="left:0px; top:250px; width:808px; height:150px"><p class="nom">La plupart des visuels</p><p class="desc">Chiffres clés, graphiques, fiche du territoire, zoom de la carte</p></div>
+<div class="noeud" style="left:856px; top:250px; width:808px; height:150px"><p class="nom">Les blocs « Comparaison »</p><p class="desc">Le territoire principal et le territoire comparé côte à côte</p></div>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M190.0 110.0 L190.0 250.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#tete)"/></svg>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M618.0 110.0 L618.0 250.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#tete)"/></svg>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M1046.0 110.0 L1046.0 250.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#tete)"/></svg>
+<svg class="connecteur" aria-hidden="true" width="1" height="1"><path d="M1474.0 110.0 L1474.0 250.0" fill="none" stroke="#7C8A9A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#tete)"/></svg>
+</div>
+<div class="grille3">
+<div class="carte"><h3>En cascade</h3><p class="texte">La maille choisie remplit la liste des territoires.</p></div>
+<div class="carte"><h3>Mémorisés</h3><p class="texte">Le choix suit l’utilisateur d’une page à l’autre.</p></div>
+<div class="carte"><h3>Liés à la carte</h3><p class="texte">Un clic sur un territoire le choisit et zoome dessus.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>12 / 19</p></div>
+<aside class="notes">Inspiré de l’Observatoire métropolitain de l’emploi de Lille. Le choix est gardé dans le navigateur (localStorage). Quand un indicateur n’existe pas à la maille choisie, par exemple les embauches pour une commune, le site affiche celui du territoire qui la contient et le dit en clair.</aside>
+</section>
+<section id="pages">
+<div class="titre"><p class="surtitre">Étape 5 · Afficher</p><h2>Huit pages, une question par page</h2></div>
+<table><tr class="entete"><th style="width:27%">Page</th><th style="width:35%">La question</th><th style="width:38%">Ce qu’on y voit</th></tr><tr><td>Accueil</td><td>Par où commencer ?</td><td>Recherche d’une commune, chiffres clés</td></tr><tr><td>Se déplacer</td><td>Comment va-t-on travailler ?</td><td>Carte, fiche, modes de transport</td></tr><tr><td>Trouver un emploi</td><td>Où recrute-t-on ?</td><td>Bassins, métiers, chômage</td></tr><tr><td>D’où viennent les travailleurs</td><td>Qui vient travailler ici ?</td><td>Carte des trajets, flèches</td></tr><tr><td>Revenus et transports</td><td>Modestes et aisés, même trajet ?</td><td>Groupes de revenus, classement</td></tr><tr><td>Gares et stations</td><td>Où sont les gares ?</td><td>Carte des gares, fréquentation</td></tr><tr><td>Catalogue des données</td><td>Que veut dire cet indicateur ?</td><td>28 définitions, sources, échelles</td></tr><tr><td>Sources et méthode</td><td>D’où viennent les chiffres ?</td><td>Liens, licences, méthode</td></tr></table>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>13 / 19</p></div>
+<aside class="notes">Chaque page suit le même motif : chiffres clés, un graphique, un tableau de comparaison, un encadré « À savoir », puis la source.</aside>
+</section>
+<section id="lisibilite" class="pale">
+<div class="titre"><p class="surtitre">Étape 5 · Afficher</p><h2>Lisible par tout le monde, pas seulement par les spécialistes</h2></div>
+<div class="grille3">
+<div class="carte"><h3>La charte d’IDFM</h3><p class="texte">Police Raleway, encre bleu-gris, un seul bleu pour ce qui est cliquable, rouge pour les alertes.</p></div>
+<div class="carte"><h3>« Comment lire »</h3><p class="texte">Sous chaque graphique, deux ou trois phrases expliquent ce qu’il montre.</p></div>
+<div class="carte"><h3>« À savoir »</h3><p class="texte">Les définitions de l’INSEE et de France Travail, en mots simples.</p></div>
+<div class="carte"><h3>La couleur ne dit rien seule</h3><p class="texte">Chaque valeur est écrite sur sa barre ; une infobulle donne le chiffre exact.</p></div>
+<div class="carte"><h3>Lexique et catalogue</h3><p class="texte">Les mots de chaque page en bas de page, les 28 indicateurs dans un catalogue.</p></div>
+<div class="carte"><h3>Export PDF</h3><p class="texte">Chaque page s’imprime ou s’enregistre en PDF pour être partagée.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>14 / 19</p></div>
+<aside class="notes">Nous avons suivi la page « accessibilité des datavisualisations » du hackathon : contrastes, texte de 13 px minimum dans les graphiques, valeurs écrites plutôt que lues sur un axe.</aside>
+</section>
+<section id="automatisation">
+<div class="titre"><p class="surtitre">Étape 6 · Publier</p><h2>Le site se reconstruit seul, chaque lundi et à chaque modification</h2></div>
+<div class="chaine">
+<div class="maillon"><p class="num">Déclencheur</p><p class="nom">Lundi 6 h ou push</p><p class="outil">Planification GitHub Actions</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">1</p><p class="nom">Télécharger</p><p class="outil">Script d’ingestion</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">2</p><p class="nom">Construire</p><p class="outil">dbt build et 67 contrôles</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">3</p><p class="nom">Exporter</p><p class="outil">10 Parquet vérifiés</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon"><p class="num">4</p><p class="nom">Générer</p><p class="outil">Site Observable</p></div>
+<div class="fleche forme" aria-hidden="true"><svg viewBox="0 0 40 20" preserveAspectRatio="none" width="100%" height="100%"><path d="M0 6 H24 V0 L40 10 L24 20 V14 H0 Z" fill="currentColor"/></svg></div>
+<div class="maillon fort"><p class="num">5</p><p class="nom">Publier</p><p class="outil">GitHub Pages</p></div>
+</div>
+<div class="grille2">
+<div class="carte"><h3>Si une étape échoue</h3><p class="texte">Rien n’est publié : la version en ligne reste la précédente, et l’équipe voit l’erreur dans GitHub.</p></div>
+<div class="carte"><h3>Pendant la mise à jour</h3><p class="texte">Les fichiers de la version précédente restent en ligne jusqu’à la mise à jour suivante : un visiteur qui a encore l’ancienne page ne voit pas d’erreur.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>15 / 19</p></div>
+<aside class="notes">Un second workflow tourne sur chaque pull request : il reconstruit tout à partir des Parquet versionnés, sans téléchargement. On ne fusionne que du code qui passe.</aside>
+</section>
+<section id="problemes" class="pale">
+<div class="titre"><p class="surtitre">Ce qu’on a appris</p><h2>Les problèmes rencontrés et nos solutions</h2></div>
+<table><tr class="entete"><th style="width:32%">Problème</th><th style="width:33%">Cause</th><th style="width:35%">Notre solution</th></tr><tr><td>Erreurs de lecture des données</td><td>GitHub Pages compresse les fichiers</td><td>Chaque fichier est téléchargé en entier</td></tr><tr><td>Page cassée après une mise à jour</td><td>Ancienne page gardée en cache</td><td>On garde les fichiers précédents</td></tr><tr><td>Pas de chiffre pour une commune</td><td>Embauches publiées par bassin</td><td>Le bassin qui la contient, signalé</td></tr><tr><td>Source indisponible</td><td>Erreurs ponctuelles du site INSEE</td><td>Parquet versionnés, ingestion tolérante</td></tr><tr><td>Graphiques peu compris</td><td>Termes techniques, parts mal lues</td><td>« Comment lire », valeurs sur les barres</td></tr></table>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>16 / 19</p></div>
+<aside class="notes">Le premier problème est le plus technique : DuckDB lit les Parquet par morceaux et se fie à la taille annoncée par le serveur ; GitHub Pages annonce la taille compressée. Résultat : le pied du fichier est lu au mauvais endroit. Nous l’avons diagnostiqué en comparant les en-têtes HTTP, puis contourné en téléchargeant chaque fichier en entier.</aside>
+</section>
+<section id="resultats" class="sombre">
+<div class="titre"><p class="surtitre">Ce qu’on a appris</p><h2>Ce que montrent les données</h2></div>
+<div class="grille2">
+<div class="carte"><p class="chiffre">45 % / 40 %</p><p class="texte">des trajets vers le travail se font en transports en commun / en voiture (recensement 2022).</p></div>
+<div class="carte"><p class="chiffre">9 % → 66 %</p><p class="texte">de trajets en voiture : de Paris à la Seine-et-Marne.</p></div>
+<div class="carte"><p class="chiffre">921 communes</p><p class="texte">sur 1 266 n’ont pas de gare : 18,5 % des actifs y vivent, et 68 % d’entre eux vont travailler en voiture.</p></div>
+<div class="carte"><p class="chiffre">35 %</p><p class="texte">des 386 835 embauches prévues en 2026 sont jugées difficiles à pourvoir, jusqu’à 61 % dans le bassin Sud Ouest Francilien.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>17 / 19</p></div>
+<aside class="notes">Sources : INSEE recensement 2022, IDFM emplacement des gares, France Travail BMO 2026. La part de voiture dans les communes sans gare est une moyenne pondérée par le nombre d’actifs. La Seine-Saint-Denis a le chômage le plus élevé (11,5 % au 2e trimestre 2026) alors que le bassin voisin de Roissy figure parmi ceux qui recrutent le plus.</aside>
+</section>
+<section id="suite">
+<div class="titre"><p class="surtitre">Ce qu’on a appris</p><h2>Les limites et la suite</h2></div>
+<div class="grille2">
+<div style="display:flex; flex-direction:column; gap:24px">
+<h3>Les limites</h3>
+<div class="carte"><h3>Un sondage au 1/5</h3><p class="texte">Les petits flux entre communes sont approximatifs ; nous les grisons sous 200 actifs.</p></div>
+<div class="carte"><h3>Des intentions, pas des embauches</h3><p class="texte">L’enquête de France Travail mesure ce que les employeurs prévoient.</p></div>
+<div class="carte"><h3>Le ferré seulement</h3><p class="texte">Les validations du bus ne sont pas publiées par arrêt.</p></div>
+</div>
+<div style="display:flex; flex-direction:column; gap:24px">
+<h3>Et ensuite</h3>
+<div class="carte"><h3>Les horaires</h3><p class="texte">Croiser l’offre horaire (GTFS) avec les métiers aux horaires décalés.</p></div>
+<div class="carte"><h3>Le temps de trajet</h3><p class="texte">Compter les emplois accessibles en 45 minutes, avant et après le Grand Paris Express.</p></div>
+<div class="carte"><h3>Le bus et le tramway</h3><p class="texte">Ajouter les arrêts et la fréquentation du réseau de surface.</p></div>
+</div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>18 / 19</p></div>
+<aside class="notes">Recommandation à IDFM : publier les validations par arrêt de bus et des isochrones de temps de trajet en transports en commun, ce qui permettrait de mesurer directement l’accès à l’emploi.</aside>
+</section>
+<section id="equipe" class="sombre">
+<div class="titre"><p class="surtitre">Merci</p><h2>L’équipe YSSAK</h2></div>
+<div class="grille3">
+<div class="carte"><h3>Taha Yassine Tourbi</h3></div>
+<div class="carte"><h3>Kris Lokoun</h3></div>
+<div class="carte"><h3>Mohamed-Sami Mechaiakh</h3></div>
+<div class="carte"><h3>Arsène Tognifode</h3></div>
+<div class="carte"><h3>Soriba Touré</h3></div>
+</div>
+<div style="display:flex; flex-direction:column; gap:12px">
+<p class="lien-site">Le site : tourbiriad26-hub.github.io/hakathon_mobilite</p>
+<p class="lien-site">Le code : github.com/tourbiriad26-hub/hakathon_mobilite</p>
+<p class="chapo">Code sous licence MIT, données sous Licence Ouverte 2.0.</p>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>19 / 19</p></div>
+<aside class="notes">Remercier le jury et IDFM. Rappeler que tout est public et reproductible : le dépôt contient le pipeline complet.</aside>
+</section>
+
+</div>
+<p id="aide">← → pour changer de diapositive · N : notes · F : plein écran</p>
+<script>
+const diapos = [...document.querySelectorAll('#scene > section')];
+let n = Math.max(0, Math.min(diapos.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));
+const scene = document.getElementById('scene');
+function ajuster() {
+  const e = Math.min(innerWidth / 1920, innerHeight / 1080);
+  scene.style.transform = `translate(${(innerWidth - 1920 * e) / 2}px, ${(innerHeight - 1080 * e) / 2}px) scale(${e})`;
+}
+function montrer(i) {
+  n = Math.max(0, Math.min(diapos.length - 1, i));
+  diapos.forEach((d, k) => d.classList.toggle('active', k === n));
+  history.replaceState(null, '', '#' + (n + 1));
+}
+addEventListener('resize', ajuster);
+addEventListener('keydown', (e) => {
+  if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) montrer(n + 1);
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) montrer(n - 1);
+  else if (e.key === 'Home') montrer(0);
+  else if (e.key === 'End') montrer(diapos.length - 1);
+  else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('voir-notes');
+  else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+});
+addEventListener('click', (e) => { if (!e.target.closest('a')) montrer(e.clientX > innerWidth / 3 ? n + 1 : n - 1); });
+ajuster(); montrer(n);
+</script>
+</body>
+</html>

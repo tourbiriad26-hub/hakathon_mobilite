@@ -1,0 +1,23 @@
+<section id="filtres" class="pale">
+<div class="titre"><p class="surtitre">Étape 5 · Afficher</p><h2>Quatre filtres communs à toutes les pages</h2></div>
+<div class="hote" style="height:400px">
+<!-- F1 0,0,380,110  F2 428,0,380,110  F3 856,0,380,110  F4 1284,0,380,110  G 0,250,808,150  H 856,250,808,150 -->
+<div class="noeud" style="left:0px; top:0px; width:380px; height:110px"><p class="nom">Maille géographique</p><p class="desc">ex. commune</p></div>
+<div class="noeud" style="left:428px; top:0px; width:380px; height:110px"><p class="nom">Territoire principal</p><p class="desc">ex. Montreuil</p></div>
+<div class="noeud" style="left:856px; top:0px; width:380px; height:110px"><p class="nom">Maille de comparaison</p><p class="desc">ex. département</p></div>
+<div class="noeud" style="left:1284px; top:0px; width:380px; height:110px"><p class="nom">Territoire comparé</p><p class="desc">ex. Seine-Saint-Denis</p></div>
+<div class="noeud fort" style="left:0px; top:250px; width:808px; height:150px"><p class="nom">La plupart des visuels</p><p class="desc">Chiffres clés, graphiques, fiche du territoire, zoom de la carte</p></div>
+<div class="noeud" style="left:856px; top:250px; width:808px; height:150px"><p class="nom">Les blocs « Comparaison »</p><p class="desc">Le territoire principal et le territoire comparé côte à côte</p></div>
+<x-connector class="lien" x1="190" y1="110" x2="190" y2="250"></x-connector>
+<x-connector class="lien" x1="618" y1="110" x2="618" y2="250"></x-connector>
+<x-connector class="lien" x1="1046" y1="110" x2="1046" y2="250"></x-connector>
+<x-connector class="lien" x1="1474" y1="110" x2="1474" y2="250"></x-connector>
+</div>
+<div class="grille3">
+<div class="carte"><h3>En cascade</h3><p class="texte">La maille choisie remplit la liste des territoires.</p></div>
+<div class="carte"><h3>Mémorisés</h3><p class="texte">Le choix suit l’utilisateur d’une page à l’autre.</p></div>
+<div class="carte"><h3>Liés à la carte</h3><p class="texte">Un clic sur un territoire le choisit et zoome dessus.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>12 / 19</p></div>
+<aside>Inspiré de l’Observatoire métropolitain de l’emploi de Lille. Le choix est gardé dans le navigateur (localStorage). Quand un indicateur n’existe pas à la maille choisie, par exemple les embauches pour une commune, le site affiche celui du territoire qui la contient et le dit en clair.</aside>
+</section>

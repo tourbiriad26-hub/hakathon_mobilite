@@ -1,0 +1,18 @@
+<section id="ingestion" class="pale">
+<div class="titre"><p class="surtitre">Étape 2 · Ingérer</p><h2>Un script Python télécharge et normalise chaque source</h2></div>
+<div class="rangee" style="gap:48px">
+<div class="pile">
+<div class="maillon"><p class="num">1</p><p class="nom">Télécharger</p><p class="outil">12 sources, 3 essais par fichier</p></div>
+<x-shape kind="arrow-down" class="fleche-bas"></x-shape>
+<div class="maillon"><p class="num">2</p><p class="nom">Garder une copie</p><p class="outil">data/raw : pas de re-téléchargement</p></div>
+<x-shape kind="arrow-down" class="fleche-bas"></x-shape>
+<div class="maillon fort"><p class="num">3</p><p class="nom">Écrire en Parquet</p><p class="outil">data/parquet : 19 fichiers, 17 Mo</p></div>
+</div>
+<div style="display:flex; flex-direction:column; gap:24px; flex:1">
+<div class="carte"><h3>Pourquoi Parquet ?</h3><p class="texte">Un format en colonnes, compressé et typé : plus léger que les CSV et les fichiers Excel d’origine, et lu directement par DuckDB.</p><p class="outil">scripts/ingest.py · pandas · DuckDB</p></div>
+<div class="carte"><h3>Et si une source tombe ?</h3><p class="texte">Le site de l’INSEE renvoie parfois des erreurs. Les fichiers Parquet sont versionnés dans le dépôt : la source en panne est sautée, la version précédente est réutilisée.</p></div>
+</div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>6 / 19</p></div>
+<aside>Aucune règle métier à cette étape : on lit les formats d’origine (Excel, ZIP, CSV, API ODS) et on écrit un Parquet propre. Les contours de communes sont simplifiés avec shapely pour alléger les cartes.</aside>
+</section>

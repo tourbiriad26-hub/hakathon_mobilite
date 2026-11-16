@@ -1,0 +1,14 @@
+<section id="qualite" class="pale">
+<div class="titre"><p class="surtitre">Étape 4 · Contrôler</p><h2>67 vérifications à chaque construction</h2></div>
+<div class="rangee" style="gap:48px">
+<div style="display:flex; flex-direction:column; gap:16px; width:420px">
+<p class="chiffre">67</p>
+<p class="chapo">contrôles dbt : 4 référentiels chargés, 26 tables construites, 37 tests passés. Un seul échec et rien n’est publié.</p>
+</div>
+<div style="flex:1">
+<table><tr class="entete"><th style="width:38%">Contrôle</th><th style="width:62%">Ce qu’il vérifie</th></tr><tr><td>Unicité</td><td>Un territoire et un indicateur n’apparaissent qu’une fois</td></tr><tr><td>Parts entre 0 et 100</td><td>Aucun pourcentage aberrant</td></tr><tr><td>Somme des modes = 100</td><td>Pour chaque territoire, à 0,1 point près</td></tr><tr><td>Rattachement des trajets</td><td>Chaque commune d’un trajet existe</td></tr><tr><td>Bassins France Travail</td><td>Les 25 bassins retrouvent leur bassin régional</td></tr><tr><td>Fichiers publiés</td><td>Chaque Parquet est complet et se relit en entier</td></tr></table>
+</div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>10 / 19</p></div>
+<aside>Les tests sont des requêtes SQL qui doivent renvoyer zéro ligne. Ils tournent aussi sur chaque proposition de modification (pull request), avant toute fusion dans la branche principale.</aside>
+</section>

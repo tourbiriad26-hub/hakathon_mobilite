@@ -1,0 +1,22 @@
+<section id="automatisation">
+<div class="titre"><p class="surtitre">Étape 6 · Publier</p><h2>Le site se reconstruit seul, chaque lundi et à chaque modification</h2></div>
+<div class="chaine">
+<div class="maillon"><p class="num">Déclencheur</p><p class="nom">Lundi 6 h ou push</p><p class="outil">Planification GitHub Actions</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">1</p><p class="nom">Télécharger</p><p class="outil">Script d’ingestion</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">2</p><p class="nom">Construire</p><p class="outil">dbt build et 67 contrôles</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">3</p><p class="nom">Exporter</p><p class="outil">10 Parquet vérifiés</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon"><p class="num">4</p><p class="nom">Générer</p><p class="outil">Site Observable</p></div>
+<x-shape kind="arrow-right" class="fleche"></x-shape>
+<div class="maillon fort"><p class="num">5</p><p class="nom">Publier</p><p class="outil">GitHub Pages</p></div>
+</div>
+<div class="grille2">
+<div class="carte"><h3>Si une étape échoue</h3><p class="texte">Rien n’est publié : la version en ligne reste la précédente, et l’équipe voit l’erreur dans GitHub.</p></div>
+<div class="carte"><h3>Pendant la mise à jour</h3><p class="texte">Les fichiers de la version précédente restent en ligne jusqu’à la mise à jour suivante : un visiteur qui a encore l’ancienne page ne voit pas d’erreur.</p></div>
+</div>
+<div class="pied"><p>YSSAK · Hackaviz Mobilités 2026 · Défi 2</p><p>15 / 19</p></div>
+<aside>Un second workflow tourne sur chaque pull request : il reconstruit tout à partir des Parquet versionnés, sans téléchargement. On ne fusionne que du code qui passe.</aside>
+</section>

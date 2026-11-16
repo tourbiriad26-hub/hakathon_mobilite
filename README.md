@@ -2,7 +2,8 @@
 
 **Équipe :** Taha Yassine TOURBI, Kris LOKOUN, Mohamed-sami MECHAIAKH, Arsene TOGNIFODE, Soriba TOURE  
 **Défi :** Défi 2 — Les mobilités et l'emploi  
-**Site :** https://tourbiriad26-hub.github.io/hakathon_mobilite/
+**Site :** https://tourbiriad26-hub.github.io/hakathon_mobilite/  
+**Présentation :** https://tourbiriad26-hub.github.io/hakathon_mobilite/presentation/ (diaporama de la démarche technique, sources dans [`presentation/`](presentation/))
 
 Pipeline de données ouvertes et dashboard pour le défi « emploi » : comment les Franciliens vont-ils
 travailler, d'où viennent les actifs d'un territoire, et quel lien avec les revenus, le chômage et
